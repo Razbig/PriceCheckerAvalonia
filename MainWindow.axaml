@@ -1,0 +1,165 @@
+﻿<Window x:Class="PriceCheckerAvalonia.MainWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PriceChecker"
+        WindowState="FullScreen"
+        SystemDecorations="None"
+        Padding="0"
+        Background="{DynamicResource ColorMainBg}">
+
+    <Window.Styles>
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{Binding $parent[Button].Background}"/>
+        </Style>
+        <Style Selector="Button:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{Binding $parent[Button].Background}"/>
+        </Style>
+	</Window.Styles>
+
+	<Viewbox Stretch="Uniform" x:Name="MainRootUniform">
+		<Grid x:Name="MainRootGrid" Width="1920" Height="1080">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="200"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+
+			<Grid x:Name="HeaderAndBgArea" Grid.Row="0" Grid.RowSpan="2">
+				<Path Fill="{DynamicResource ColorHeaderBg}"
+					  Stretch="Fill"
+					  VerticalAlignment="Top"
+					  Height="250"
+					  Data="M 0,0 L 100,0 L 100,70 Q 50,110 0,70 Z">
+					<Path.Effect>
+						<DropShadowEffect BlurRadius="20" OffsetX="0" OffsetY="-3" Opacity="0.15"/>
+					</Path.Effect>
+				</Path>
+
+				<Grid Height="200" VerticalAlignment="Top" Margin="80,0">
+					<Border Background="White" CornerRadius="40" Width="250" Height="80"
+							VerticalAlignment="Center" HorizontalAlignment="Left" Padding="15">
+						<Image Source="/Assets/Kopiyka_logo.png" Stretch="UniformToFill"
+							   RenderOptions.BitmapInterpolationMode="HighQuality"
+							   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+					</Border>
+
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+
+						<!-- Індикатор сканера -->
+						<Border Background="White" BorderBrush="{DynamicResource ColorScannerBlue}"
+								BorderThickness="2" CornerRadius="12"
+								Width="80" Height="80" Margin="0,0,20,0">
+							<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+								<Rectangle Width="45" Height="15" Fill="#3A99FF"/>
+								<Rectangle Width="45" Height="15" Fill="#FFDA2C"/>
+							</StackPanel>
+						</Border>
+
+						<!-- Кнопка асистента -->
+						<Button x:Name="OpenAssistantButton"
+								Click="OpenAssistant_Click"
+								Cursor="Hand"
+								Background="White"
+								BorderBrush="#009CDF"
+								BorderThickness="2"
+								CornerRadius="12"
+								Width="300" Height="80"
+								Padding="0">
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+								<PathIcon Data="{StaticResource AssistantIcon}"
+										  Foreground="#009CDF"
+										  Width="40" Height="40"
+										  Margin="0,0,10,0"/>
+								<TextBlock Text="{DynamicResource TextAssistantBtn}"
+										   VerticalAlignment="Center"
+										   FontSize="24" FontWeight="SemiBold"
+										   Foreground="#202020"/>
+							</StackPanel>
+						</Button>
+
+						<!-- Кнопка налаштувань -->
+						<Button x:Name="SettingsButton"
+								Click="SettingsButton_Click"
+								Cursor="Hand"
+								IsVisible="False"
+								Background="White"
+								BorderBrush="#009CDF"
+								BorderThickness="2"
+								CornerRadius="12"
+								Width="80" Height="80"
+								Margin="0,0,20,0"
+								Padding="0">
+							<PathIcon Data="{StaticResource SettingsIcon}"
+									  Foreground="#009CDF"
+									  Width="40" Height="40"/>
+						</Button>
+
+						<!-- Кнопка виходу (ExitIcon має Stroke — використовуємо Path інлайн) -->
+						<Button x:Name="CloseAssistantButton"
+								Click="CloseAssistantLogin_Click"
+								Cursor="Hand"
+								IsVisible="False"
+								Background="White"
+								BorderBrush="#009CDF"
+								BorderThickness="2"
+								CornerRadius="12"
+								Width="200" Height="80"
+								Padding="0">
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+								<TextBlock Text="Вихід"
+										   VerticalAlignment="Center"
+										   FontSize="24" FontWeight="SemiBold"
+										   Foreground="#202020"
+										   Margin="0,0,10,0"/>
+								<Path Data="M15 4H5V18C5 18.53 5.21 19.04 5.59 19.41C5.96 19.79 6.47 20 7 20H15M16 9L19 12L16 15M19 12H9"
+									  Stroke="#009CDF"
+									  StrokeThickness="2"
+									  StrokeLineCap="Round"
+									  Fill="Transparent"
+									  Stretch="Uniform"
+									  Width="40" Height="40"/>
+							</StackPanel>
+						</Button>
+
+					</StackPanel>
+				</Grid>
+			</Grid>
+
+			<!-- Blur оверлей -->
+			<Grid x:Name="BlurOverlay"
+				  Grid.Row="0" Grid.RowSpan="2"
+				  IsVisible="False"
+				  ZIndex="5">
+				<Image x:Name="BlurredSnapshot" Stretch="Fill">
+					<Image.Effect>
+						<BlurEffect Radius="25"/>
+					</Image.Effect>
+				</Image>
+				<Rectangle Fill="#30000000"/>
+			</Grid>
+
+			<ContentControl x:Name="MainFrame"
+							Grid.Row="1"
+							ZIndex="4"/>
+
+			<ContentControl x:Name="AssistantLoginFrame"
+							Width="1200" Height="750"
+							VerticalAlignment="Center" HorizontalAlignment="Center"
+							Grid.Row="1"
+							IsVisible="False"
+							ZIndex="4"/>
+
+			<ContentControl x:Name="ProductInfoFrame"
+							Grid.Row="1"
+							IsVisible="False"
+							ZIndex="4"/>
+
+			<ContentControl x:Name="ProductNotFoundFrame"
+							Width="1200" Height="750"
+							VerticalAlignment="Center" HorizontalAlignment="Center"
+							Grid.Row="0" Grid.RowSpan="2"
+							IsVisible="False"
+							ZIndex="100"/>
+
+		</Grid>
+	</Viewbox>
+</Window>

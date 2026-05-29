@@ -1,0 +1,17 @@
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+					xmlns:system="clr-namespace:System;assembly=mscorlib">
+                    
+
+    <SolidColorBrush x:Key="ColorHeaderBg" Color="#A6D3EC"/>
+    <SolidColorBrush x:Key="ColorMainBg" Color="#F3F3F3"/>
+    <SolidColorBrush x:Key="ColorAccentWiolet" Color="#951A75"/>
+    <SolidColorBrush x:Key="ColorDarkText" Color="#202123"/>
+    <SolidColorBrush x:Key="ColorScannerBlue" Color="#009CDF"/>
+    <SolidColorBrush x:Key="ColorWhite" Color="#FFFFFF"/>
+
+    <system:String x:Key="TextMainTitle">Піднесіть штрих-код товару до сканера</system:String>
+    <system:String x:Key="TextSubTitle">щоб дізнатися його ціну</system:String>
+    <system:String x:Key="TextAssistantBtn">Для асистента</system:String>
+    
+</ResourceDictionary>

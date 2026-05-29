@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="Assets\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AvaloniaXaml Remove="Assets\Icons.axaml" />
+		<AvaloniaXaml Remove="Themes\Kopiyka.axaml" />
+		<AvaloniaResource Include="Assets\Icons.axaml" />
+		<AvaloniaResource Include="Themes\Kopiyka.axaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AvaloniaResource Include="Assets\Assistant.png" />
+		<AvaloniaResource Include="Assets\Assistant.svg" />
+		<AvaloniaResource Include="Assets\Kopiyka_logo.png" />
+		<AvaloniaResource Include="Assets\Product_with_barcode.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="12.0.2" />
+		<PackageReference Include="Avalonia.Desktop" Version="12.0.2" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.2" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.2" />
+		<PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.1">
+			<IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+			<PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Npgsql" Version="10.0.2" />
+		<PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
+		<PackageReference Include="Dapper" Version="2.1.79" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Views\ProductNotFound.axaml.cs">
+	    <DependentUpon>ProductNotFound.axaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\AssistantLogin.axaml.cs">
+	    <DependentUpon>AssistantLogin.axaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\MainPage.axaml.cs">
+	    <DependentUpon>MainPage.axaml</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,41 @@
+﻿<UserControl x:Class="PriceCheckerAvalonia.Views.MainPage"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+
+            <TextBlock Text="{DynamicResource TextMainTitle}"
+                       FontSize="54" FontWeight="Bold"
+                       Foreground="{DynamicResource ColorAccentWiolet}"
+                       TextAlignment="Center"
+                       Width="1200"
+                       TextWrapping="Wrap"/>
+
+            <TextBlock Text="{DynamicResource TextSubTitle}"
+                       FontSize="32" FontWeight="Medium"
+                       Foreground="{DynamicResource ColorDarkText}"
+                       TextAlignment="Center"
+                       Margin="0,30,0,80"/>
+
+            <Grid Width="400" Height="400">
+
+                <!-- ScannerIcon — Fill іконка → PathIcon -->
+                <PathIcon Data="{StaticResource ScannerIcon}"
+                          Foreground="#009CDF"
+                          Width="400" Height="400"/>
+
+                
+                <!-- RadiusX/RadiusY працюють в Avalonia так само -->
+                <Rectangle Height="20"
+                           Fill="{DynamicResource ColorHeaderBg}"
+                           VerticalAlignment="Center"
+                           RadiusX="10" RadiusY="10"
+                           Opacity="0.8"/>
+            </Grid>
+
+        </StackPanel>
+    </Grid>
+
+</UserControl>

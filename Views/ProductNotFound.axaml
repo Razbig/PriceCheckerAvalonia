@@ -1,0 +1,74 @@
+﻿<UserControl x:Class="PriceCheckerAvalonia.Views.ProductNotFound"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Border Background="White"
+            CornerRadius="16"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch">
+        <Grid>
+
+            <!-- Кнопка закриття — без ControlTemplate, Path інлайн -->
+            <Button HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Margin="0,60,60,0" Width="50" Height="50"
+                    Cursor="Hand" Click="CloseAssistant_Click"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="0">
+                <Path Data="M15,15 L35,35 M35,15 L15,35"
+                      Stroke="#202123"
+                      StrokeThickness="3"
+                      StrokeLineCap="Round"/>
+                <!-- StrokeStartLineCap/StrokeEndLineCap → StrokeLineCap в Avalonia -->
+            </Button>
+
+            <StackPanel Margin="100,100,100,80" VerticalAlignment="Center">
+
+                <TextBlock Text="Товар не знайдено"
+                           FontSize="36"
+                           FontFamily="Montserrat"
+                           FontWeight="Bold"
+                           Foreground="#E30613"
+                           TextAlignment="Center"
+                           LineHeight="50"
+                           Margin="0,0,0,20"/>
+
+                <TextBlock Text="Спробуйте ще раз або зверніться до співробітника"
+                           FontSize="24"
+                           FontFamily="Montserrat"
+                           FontWeight="Medium"
+                           Foreground="#202123"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,40"/>
+
+                <Image Source="/Assets/Product_with_barcode.png"
+                       Width="255" Height="140"
+                       Stretch="Uniform"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,40"/>
+
+                <!-- Кнопка "Закрити" — без ControlTemplate -->
+                <Button Width="266" Height="90"
+                        Cursor="Hand"
+                        Click="CloseAssistant_Click"
+                        Background="#009CDF"
+                        BorderThickness="0"
+                        CornerRadius="16"
+                        Padding="0"
+                        HorizontalAlignment="Center">
+                    <TextBlock Text="Закрити"
+                               Foreground="White"
+                               FontSize="32"
+                               FontFamily="Montserrat"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Button>
+
+            </StackPanel>
+        </Grid>
+    </Border>
+
+</UserControl>

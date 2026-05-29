@@ -1,0 +1,182 @@
+﻿<UserControl x:Class="PriceCheckerAvalonia.Views.ProductInfo"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Viewbox Stretch="Uniform" StretchDirection="Both" MaxWidth="1100" MaxHeight="800">
+        <Grid Width="920" Height="620">
+
+            <StackPanel Orientation="Vertical"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        MaxWidth="920">
+
+                <!-- Головна картка -->
+                <Border Height="500"
+                        BorderBrush="#DFF4FF"
+                        BorderThickness="1"
+                        CornerRadius="20"
+                        Background="White"
+                        ClipToBounds="True">
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="60"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Заголовок -->
+                        <Border Grid.Row="0" CornerRadius="20,20,0,0">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                    <!-- StartPoint/EndPoint в Avalonia у форматі % або 0-1 -->
+                                    <GradientStop Color="#009CDF" Offset="0.3"/>
+                                    <GradientStop Color="#5DCAF9" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <TextBlock Text="НАЦІОНАЛЬНИЙ КЕШБЕК"
+                                       FontFamily="Montserrat"
+                                       FontWeight="Bold"
+                                       FontSize="22"
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+
+                        <!-- Контент -->
+                        <Grid Grid.Row="1" Margin="40,30,40,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="340"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Зображення -->
+                            <Border Width="340" Height="300" CornerRadius="16" Background="#F8F8F8">
+                                <Image x:Name="ProductImage"
+                                       Source="/Assets/Kopiyka_logo.png"
+                                       Stretch="Uniform"
+                                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                <!-- BitmapScalingMode → BitmapInterpolationMode -->
+                            </Border>
+
+                            <!-- Інформація -->
+                            <StackPanel Grid.Column="1" Margin="30,0,0,0" VerticalAlignment="Center">
+
+                                <TextBlock x:Name="ProductName"
+                                           Text="Сир Galbani Mascarpone 80% свіжих вершків 250г"
+                                           FontFamily="Montserrat"
+                                           FontWeight="Bold"
+                                           FontSize="28"
+                                           Foreground="#202123"
+                                           TextWrapping="Wrap"
+                                           LineHeight="34"
+                                           Margin="0,0,0,12"/>
+
+                                <TextBlock x:Name="ProductArticle"
+                                           Text="артикул: 33163 / в наявності 25 кг."
+                                           FontFamily="Montserrat"
+                                           FontSize="15"
+                                           Foreground="#939392"
+                                           Margin="0,0,0,20"/>
+
+                                <!-- Ціна -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                                    <TextBlock x:Name="ProductPrice"
+                                               Text="49.90 ₴"
+                                               FontFamily="Montserrat"
+                                               FontWeight="Bold"
+                                               FontSize="38"
+                                               Foreground="#202123"/>
+
+                                    <TextBlock x:Name="OldPrice"
+                                               Text="53.40 ₴"
+                                               FontFamily="Montserrat"
+                                               FontSize="20"
+                                               Foreground="#939392"
+                                               TextDecorations="Strikethrough"
+                                               VerticalAlignment="Bottom"
+                                               Margin="12,0,0,6"
+                                               IsVisible="False"/>
+                                    <!-- Visibility="Collapsed" → IsVisible="False" -->
+                                </StackPanel>
+
+                                <!-- Характеристики -->
+                                <StackPanel>
+                                    <TextBlock Text="Категорія: Овочі"
+                                               FontSize="14" Foreground="#202123" Margin="0,0,0,8"/>
+                                    <TextBlock Text="Країна: Україна"
+                                               FontSize="14" Foreground="#202123" Margin="0,0,0,8"/>
+                                    <TextBlock x:Name="ProductType"
+                                               Text="Вид продукції: ..."
+                                               FontSize="14" Foreground="#202123" Margin="0,0,0,8"/>
+                                    <TextBlock x:Name="Brand"
+                                               Text="Торгова марка: ..."
+                                               FontSize="14" Foreground="#202123"/>
+                                </StackPanel>
+
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Промо секція -->
+                        <!-- Visibility="Hidden" → Opacity="0" (зберігає місце як Hidden) -->
+                        <Border x:Name="PromoSection"
+                                Grid.Row="2"
+                                Height="87"
+                                Opacity="0"
+                                Background="#EEF2FC"
+                                CornerRadius="0,0,16,16">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="0" OffsetX="0" OffsetY="-1"
+                                                  Opacity="0.06" Color="Black"/>
+                                <!-- Direction="270" ShadowDepth="1" → OffsetX="0" OffsetY="-1" -->
+                            </Border.Effect>
+
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="30,0"
+                                        VerticalAlignment="Center">
+
+                                <Grid Width="36" Height="36" Margin="0,0,16,0" VerticalAlignment="Center">
+                                    <Ellipse Fill="#009CDF"/>
+                                    <TextBlock Text="%"
+                                               FontFamily="Montserrat" FontWeight="Bold"
+                                               FontSize="14" Foreground="White"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="АКЦІЯ"
+                                               FontFamily="Montserrat" FontWeight="Bold"
+                                               FontSize="20" Foreground="#009CDF" LineHeight="24"/>
+                                    <TextBlock x:Name="PromoText"
+                                               Text=""
+                                               FontFamily="Montserrat" FontSize="15"
+                                               Foreground="#009CDF"
+                                               TextWrapping="Wrap" LineHeight="25"/>
+                                </StackPanel>
+
+                            </StackPanel>
+                        </Border>
+
+                    </Grid>
+                </Border>
+
+                <!-- Нижня підказка -->
+                <Border Height="70" Background="White" CornerRadius="18" Margin="0,25,0,0">
+                    <TextBlock Text="Піднесіть штрих-код товару до сканера щоб дізнатися його ціну"
+                               FontFamily="Montserrat"
+                               FontSize="16"
+                               Foreground="#202123"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Margin="40,0"/>
+                </Border>
+
+            </StackPanel>
+        </Grid>
+    </Viewbox>
+
+</UserControl>

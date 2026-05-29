@@ -1,0 +1,34 @@
+﻿<UserControl x:Class="PriceCheckerAvalonia.Views.AssistantLogin"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+
+            <TextBlock Text="Вхід для асистента"
+                       FontSize="54" FontWeight="Bold"
+                       Foreground="{DynamicResource ColorAccentWiolet}"
+                       TextAlignment="Center"
+                       Width="1200"
+                       TextWrapping="Wrap"/>
+
+            <TextBlock Text="Відскануйте свій бейдж, щоб продовжити роботу"
+                       FontSize="32" FontWeight="Medium"
+                       Foreground="{DynamicResource ColorDarkText}"
+                       TextAlignment="Center"
+                       Margin="0,30,0,80"/>
+
+            <Grid Width="400" Height="400">
+                <Image Source="/Assets/Assistant.png"
+                       Stretch="Uniform"
+                       RenderOptions.BitmapInterpolationMode="HighQuality"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+                <!-- RenderOptions.BitmapScalingMode → RenderOptions.BitmapInterpolationMode -->
+            </Grid>
+
+        </StackPanel>
+    </Grid>
+
+</UserControl>
