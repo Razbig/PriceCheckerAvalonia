@@ -1,0 +1,133 @@
+<UserControl x:Class="PriceCheckerAvalonia.Views.Settings"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Viewbox Stretch="Uniform" StretchDirection="Both" MaxWidth="1100" MaxHeight="800">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+
+            <TextBlock Text="Налаштування планшету"
+                       FontSize="54" FontWeight="Bold"
+                       Foreground="{DynamicResource ColorAccentWiolet}"
+                       TextAlignment="Center"
+                       Width="1200"
+                       TextWrapping="Wrap"/>
+
+            <DockPanel LastChildFill="True"
+                       Height="56" Margin="0,50,0,0">
+                <TextBlock DockPanel.Dock="Left"
+                           Text="МАГАЗИН В ЯКОМУ ВСТАНОВЛЕНО ПЛАНШЕТ:"
+                           FontFamily="Montserrat"
+                           FontWeight="Bold"
+                           FontSize="20"
+                           VerticalAlignment="Center"
+                           Margin="0,0,84,0"/>
+                <ComboBox ItemsSource="{Binding Stores}"
+                          SelectedItem="{Binding SelectedStore}"
+                          DisplayMemberBinding="{Binding ShopName}"
+                          HorizontalAlignment="Stretch"
+                          Height="56"
+                          Padding="20,12"
+                          CornerRadius="16"
+                          BorderBrush="#939392"
+                          BorderThickness="1"
+                          FontFamily="Montserrat"
+                          FontSize="20"
+                          VerticalContentAlignment="Center"/>
+            </DockPanel>
+
+            <DockPanel LastChildFill="True" Height="56" Margin="0,24,0,0">
+                <TextBlock DockPanel.Dock="Left"
+                           Text="ТИП ЦІННИКА:"
+                           FontFamily="Montserrat"
+                           FontWeight="Bold"
+                           FontSize="20"
+                           VerticalAlignment="Center"
+                           Margin="0,0,32,0"/>
+                <Border CornerRadius="12" Padding="4">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <RadioButton x:Name="PriceType32Radio" Classes="ToggleBtn"
+                                     Content="32mm"
+                                     GroupName="PrintTypeGroup"
+                                     IsChecked="{Binding IsPrint32, Mode=TwoWay}"/>
+                        <RadioButton x:Name="PriceType39Radio" Classes="ToggleBtn"
+                                     Content="39mm"
+                                     GroupName="PrintTypeGroup"
+                                     IsChecked="{Binding IsPrint39, Mode=TwoWay}"/>
+                    </StackPanel>
+                </Border>
+            </DockPanel>
+
+            <!-- Кнопки внизу -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="20" Margin="0,48,0,0">
+                <Button Width="300" Height="90"
+                        Cursor="Hand"
+                        Click="ShowSystemSettings_Click"
+                        Background="White"
+                        BorderBrush="#009CDF"
+                        BorderThickness="2"
+                        CornerRadius="16"
+                        Padding="0">
+                    <TextBlock Text="Системні налаштування"
+                               Foreground="#009CDF"
+                               FontSize="28"
+                               FontFamily="Montserrat"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Button>
+
+                <Button Width="220" Height="90"
+                        Cursor="Hand"
+                        Click="ShowAdmin_Click"
+                        Background="White"
+                        BorderBrush="#DD2B2B"
+                        BorderThickness="2"
+                        CornerRadius="16"
+                        Padding="0">
+                    <TextBlock Text="Адмін"
+                               Foreground="#DD2B2B"
+                               FontSize="24"
+                               FontFamily="Montserrat"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Button>
+                <Button Width="320" Height="90"
+                        Cursor="Hand"
+                        Click="ShowBarSync_Click"
+                        Background="#F3F3F3"
+                        BorderBrush="#009CDF"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Padding="0">
+                    <TextBlock Text="Завантажити t_bar з мастера"
+                               Foreground="#009CDF"
+                               FontSize="20"
+                               FontFamily="Montserrat"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Button>
+
+                <Button Width="266" Height="90"
+                        Cursor="Hand"
+                        Click="SaveSettings_Click"
+                        Background="#009CDF"
+                        BorderThickness="0"
+                        CornerRadius="16"
+                        Padding="0">
+                    <TextBlock Text="Зберегти"
+                               Foreground="White"
+                               FontSize="32"
+                               FontFamily="Montserrat"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Button>
+            </StackPanel>
+
+        </StackPanel>
+    </Viewbox>
+
+</UserControl>

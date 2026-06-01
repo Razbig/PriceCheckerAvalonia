@@ -92,15 +92,35 @@ public partial class MainWindow : Window
 
     private void ProcessBarcode(string barcode)
     {
-        if (ProductNotFoundFrame.IsVisible)
+        // Try to find product in local DB
+        try
         {
-            HideBlurDialog();
-            SetMainFrameVisible(true);
-        }
+            var app = Avalonia.Application.Current as App;
+            var localDb = app?.LocalDb; // core LocalDatabase
+            PriceCheckerAvalonia.Core.Model.Product? product = null;
+            if (localDb != null)
+            {
+                product = localDb.FindByBarcode(barcode);
+            }
 
-        //ShowFrame(ProductInfoFrame);
-        //ShowFrame(ProductNotFoundFrame);
-        ShowErrorPopup();
+            if (product != null)
+            {
+                // Show product info
+                var info = new ProductInfo();
+                info.SetProduct(product);
+                ProductInfoFrame.Content = info;
+                ShowFrame(ProductInfoFrame);
+            }
+            else
+            {
+                // Not found
+                ShowErrorPopup();
+            }
+        }
+        catch
+        {
+            ShowErrorPopup();
+        }
     }
 
     // ──────────────────────────────────────────────
@@ -169,7 +189,8 @@ public partial class MainWindow : Window
 
     private void SettingsButton_Click(object? sender, RoutedEventArgs e)
     {
-        // TODO
+        ShowFrame(SettingsFrame);
+        SettingsFrame.Content = new Settings();
     }
 
     // ──────────────────────────────────────────────
@@ -178,7 +199,7 @@ public partial class MainWindow : Window
 
     private void ShowFrame(Control frameToShow)
     {
-        Control[] allFrames = { MainFrame, ProductNotFoundFrame, AssistantLoginFrame, ProductInfoFrame };
+        Control[] allFrames = { MainFrame, ProductNotFoundFrame, AssistantLoginFrame, ProductInfoFrame, SettingsFrame};
 
         foreach (var frame in allFrames)
         {

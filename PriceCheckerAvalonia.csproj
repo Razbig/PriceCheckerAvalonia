@@ -4,7 +4,7 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
-		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -49,6 +49,13 @@
 	  <Compile Update="Views\MainPage.axaml.cs">
 	    <DependentUpon>MainPage.axaml</DependentUpon>
 	  </Compile>
+      <Compile Update="Views\Settings.axaml.cs">
+		<DependentUpon>Settings.axaml</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\PriceCheckerAvalonia.Core\PriceCheckerAvalonia.Core.csproj" />
 	</ItemGroup>
 
 </Project>

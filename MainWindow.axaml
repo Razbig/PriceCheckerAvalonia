@@ -160,6 +160,14 @@
 							IsVisible="False"
 							ZIndex="100"/>
 
+            <ContentControl x:Name="SettingsFrame"
+					Grid.Row="1"
+					HorizontalAlignment="Stretch"
+					VerticalAlignment="Top"
+					Margin="0,130,0,0"
+					IsVisible="False"
+					ZIndex="4"/>
+
 		</Grid>
 	</Viewbox>
 </Window>

@@ -6,6 +6,42 @@
 
     <Application.Styles>
         <FluentTheme />
+        <!-- Стилі для RadioButton-перемикача -->
+    <Style Selector="RadioButton.ToggleBtn">
+    <Setter Property="FontFamily" Value="Montserrat"/>
+    <Setter Property="FontSize" Value="20"/>
+    <Setter Property="Padding" Value="28,10"/>
+    <Setter Property="CornerRadius" Value="10"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="BorderBrush" Value="#939392"/>
+    <Setter Property="Background" Value="#FFFFFF"/>
+    <Setter Property="Foreground" Value="#888780"/>
+    <Setter Property="Template">
+        <ControlTemplate>
+            <Border Name="PART_Border"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{TemplateBinding CornerRadius}"
+                    Padding="{TemplateBinding Padding}">
+                <ContentPresenter Content="{TemplateBinding Content}"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"/>
+            </Border>
+        </ControlTemplate>
+    </Setter>
+</Style>
+
+<Style Selector="RadioButton.ToggleBtn:checked">
+    <Setter Property="Background" Value="#009CDF"/>
+    <Setter Property="Foreground" Value="#202123"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="BorderBrush" Value="#939392"/>
+</Style>
+
+<Style Selector="RadioButton.ToggleBtn:pointerover">
+    <Setter Property="Background" Value="#E0E0E0"/>
+</Style>
     </Application.Styles>
     
     <Application.Resources>
@@ -16,5 +52,6 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
+
 
 </Application>
