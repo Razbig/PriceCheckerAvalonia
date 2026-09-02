@@ -24,18 +24,18 @@ public partial class Settings : UserControl
     public Settings()
     {
         InitializeComponent();
-        // Resolve Core LocalDatabase from App if available
+
+        // Resolve Core LocalDatabase from App if available.
         var app = Avalonia.Application.Current as App;
-        var localDb = app?.LocalDb; // App.LocalDb is PriceCheckerAvalonia.Core.Services.LocalDatabase
-        // Our ViewModel expects PriceCheckerAvalonia.Core.Services.LocalDatabase from the core project.
-        // If App.LocalDb is of the core type (when using core project), pass it; otherwise null.
+        var localDb = app?.LocalDb; // App.LocalDb may be PriceCheckerAvalonia.Core.Services.LocalDatabase
+
         PriceCheckerAvalonia.Core.Services.LocalDatabase? coreDb = null;
         if (localDb is PriceCheckerAvalonia.Core.Services.LocalDatabase cd)
+        {
             coreDb = cd;
+        }
         else if (localDb != null)
         {
-            // App.LocalDb is the project implementation; try to reuse the same DB file by
-            // reading its connection string and creating a core LocalDatabase instance.
             try
             {
                 var conn = localDb.OpenConnection();
@@ -48,18 +48,32 @@ public partial class Settings : UserControl
             }
             catch
             {
-                // fallback to null if anything fails
                 coreDb = null;
             }
         }
+        else
+        {
+            // App.LocalDb is null — try to create core LocalDatabase from standard LocalApplicationData path
+            try
+            {
+                var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                var appDir = System.IO.Path.Combine(localAppData, "PriceCheckerAvalonia");
+                System.IO.Directory.CreateDirectory(appDir);
+                var dbPath = System.IO.Path.Combine(appDir, "pricechecker.db");
+                coreDb = new PriceCheckerAvalonia.Core.Services.LocalDatabase(dbPath);
+            }
+            catch (Exception ex)
+            {
+                // leave coreDb null but log for diagnostics
+                Debug.WriteLine($"Failed to init core LocalDatabase in Settings: {ex.Message}");
+            }
+        }
+
         _coreDbInstance = coreDb;
         _vm = new SettingsViewModel(coreDb);
         DataContext = _vm;
 
-        // Fire-and-forget remote load (ignore errors)
         _ = _vm.LoadStoresFromRemoteAsync();
-
-        // Print type is bound to SettingsViewModel (IsPrint32 / IsPrint39) and persisted there
     }
 
     private void InitializeComponent()
@@ -74,7 +88,6 @@ public partial class Settings : UserControl
         try
         {
             using var http = new HttpClient();
-            // Basic auth header (Base64 string from provided example)
             http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", "UHJpY2VDaGVja2VyOlBhc3NQcmljZUNoZWNrZXI=");
             http.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -113,13 +126,10 @@ public partial class Settings : UserControl
         }
     }
 
-    private async void SaveSettings_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void SaveSettings_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        // Save selected store via ViewModel (it already writes shop id/name on set)
-        // Save selected print type to local DB if available
         try
         {
-            // Determine selected print type from radio buttons directly to avoid binding timing issues
             string printType = "32";
             var r32 = this.FindControl<RadioButton>("PriceType32Radio");
             var r39 = this.FindControl<RadioButton>("PriceType39Radio");
@@ -128,20 +138,17 @@ public partial class Settings : UserControl
             else if (r32 != null && r32.IsChecked == true)
                 printType = "32";
 
-            // Persist print type to core DB instance if available
             if (_coreDbInstance != null)
             {
                 try { _coreDbInstance.SetPrintTypeDefault(printType); } catch { }
             }
 
-            // Selected store may not have been persisted by ViewModel if it received null DB — persist here
             var selected = _vm.SelectedStore;
             if (selected != null && _coreDbInstance != null)
             {
                 try { _coreDbInstance.SetShop(selected.ShopId, selected.ShopName); } catch { }
             }
 
-            // After persisting shop, try to fetch master_ip and save it
             try
             {
                 if (selected != null)
@@ -149,12 +156,8 @@ public partial class Settings : UserControl
                     await FetchAndSaveMasterIpAsync(selected.ShopId);
                 }
             }
-            catch
-            {
-                // ignore
-            }
+            catch { }
 
-            // After saving, read contents of sync_meta and show in a modal popup
             try
             {
                 var sb = new StringBuilder();
@@ -175,8 +178,6 @@ public partial class Settings : UserControl
                 }
 
                 var output = new StringBuilder();
-
-                // Prepend what we just saved
                 output.AppendLine($"Saved printType: {printType}");
                 var sel = _vm.SelectedStore;
                 if (sel != null)
@@ -185,7 +186,6 @@ public partial class Settings : UserControl
                     output.AppendLine("Selected store: (none)");
                 output.AppendLine("---");
 
-                // Convenience getters from DB (if available)
                 try
                 {
                     if (_coreDbInstance != null)
@@ -201,7 +201,6 @@ public partial class Settings : UserControl
                         var ad = app?.LocalDb;
                         if (ad != null)
                         {
-                            // ad is likely core LocalDatabase
                             output.AppendLine($"GetShopId(): {ad.GetShopId()}");
                             output.AppendLine($"GetShopName(): {ad.GetShopName()}");
                             output.AppendLine($"GetPrintTypeDefault(): {ad.GetPrintTypeDefault()}");
@@ -219,17 +218,10 @@ public partial class Settings : UserControl
 
                 await ShowSystemSettingsAsync(output.ToString());
             }
-            catch
-            {
-                // ignore read/display errors
-            }
+            catch { }
         }
-        catch
-        {
-            // ignore any errors saving settings
-        }
+        catch { }
 
-            // Close settings frame by finding MainWindow and hiding SettingsFrame
         try
         {
             var mw = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime d
@@ -243,15 +235,11 @@ public partial class Settings : UserControl
                 mw.SetMainFrameVisible(true);
             }
         }
-        catch
-        {
-            // ignore
-        }
+        catch { }
     }
 
-    private async void ShowSystemSettings_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void ShowSystemSettings_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        // read current settings and show popup
         try
         {
             var sb = new StringBuilder();
@@ -330,10 +318,10 @@ public partial class Settings : UserControl
         var owner = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime d
             ? d.MainWindow as Window
             : null;
-        await dlg.ShowDialog(owner);
+        await dlg.ShowDialog(owner!);
     }
 
-    private async void ShowBarSync_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void ShowBarSync_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         try
         {
@@ -343,7 +331,6 @@ public partial class Settings : UserControl
                 return;
             }
 
-            // show simple progress dialog
             var progressDlg = new Window
             {
                 Title = "Sync t_bar",
@@ -364,8 +351,7 @@ public partial class Settings : UserControl
                 ? d.MainWindow as Window
                 : null;
 
-            // show progress non-modally
-            progressDlg.Show(owner);
+            progressDlg.Show(owner!);
 
             int count = 0;
             try
@@ -385,43 +371,196 @@ public partial class Settings : UserControl
         catch { }
     }
 
-    private async void ShowAdmin_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void ShowProductsImport_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         try
         {
-            var sb = new StringBuilder();
-            sb.AppendLine("Database tables and row counts:");
-            if (_coreDbInstance != null)
+            if (_coreDbInstance == null)
             {
-                using var conn = _coreDbInstance.OpenConnection();
+                await ShowSystemSettingsAsync("Core local DB not available; cannot import products.");
+                return;
+            }
+
+            var dlg = new Window
+            {
+                Title = "Import products",
+                Width = 480,
+                Height = 160,
+                Content = new StackPanel
+                {
+                    Margin = new Thickness(10),
+                    Children =
+                    {
+                        new TextBlock { Text = "Завантаження Products.json.gz..." },
+                        new ProgressBar { IsIndeterminate = true, Height = 20, Margin = new Thickness(0,10,0,0) }
+                    }
+                }
+            };
+
+            var owner = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime d
+                ? d.MainWindow as Window
+                : null;
+
+            dlg.Show(owner!);
+
+            try
+            {
+                var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+                var importer = new PriceCheckerAvalonia.Core.Services.ApiImporter(_coreDbInstance, logger);
+                var url = "https://storge.almi.odesa.ua/pricechecker/menu/Products.json.gz";
+                await importer.ImportFromGzipJsonUrlAsync(url, default);
+            }
+            catch (Exception ex)
+            {
+                dlg.Close();
+                await ShowSystemSettingsAsync($"Error importing products: {ex.Message}");
+                return;
+            }
+
+            dlg.Close();
+            await ShowSystemSettingsAsync("Products import completed.");
+        }
+        catch { }
+    }
+
+    private async void ShowAdmin_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        try
+        {
+            if (_coreDbInstance == null)
+            {
+                await ShowSystemSettingsAsync("No local database instance available.");
+                return;
+            }
+
+            var tables = new List<(string Name, long Count)>();
+            using (var conn = _coreDbInstance.OpenConnection())
+            {
                 conn.Open();
                 using var cmd = conn.CreateCommand();
-                // enumerate tables from sqlite_master
                 cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name;";
                 using var rdr = cmd.ExecuteReader();
-                var tables = new List<string>();
                 while (rdr.Read())
                 {
-                    tables.Add(rdr.GetString(0));
+                    tables.Add((rdr.GetString(0), 0));
                 }
+            }
 
-                foreach (var t in tables)
+            // get counts
+            for (int i = 0; i < tables.Count; i++)
+            {
+                var t = tables[i].Name;
+                try
                 {
                     using var c2 = _coreDbInstance.OpenConnection();
                     c2.Open();
                     using var cmd2 = c2.CreateCommand();
                     cmd2.CommandText = $"SELECT COUNT(1) FROM \"{t}\";";
-                    var cnt = cmd2.ExecuteScalar();
-                    sb.AppendLine($"{t}: {cnt}");
+                    var cntObj = cmd2.ExecuteScalar();
+                    long cnt = 0;
+                    if (cntObj is long l) cnt = l; else if (cntObj is int ii) cnt = ii; else if (cntObj != null && long.TryParse(cntObj.ToString(), out var p)) cnt = p;
+                    tables[i] = (t, cnt);
                 }
-            }
-            else
-            {
-                sb.AppendLine("No local database instance available.");
+                catch { tables[i] = (t, -1); }
             }
 
-            await ShowSystemSettingsAsync(sb.ToString());
+            // build dialog with list of tables and buttons
+            var listBox = new ListBox { Width = 560, Height = 300 };
+            var listItems = new List<object>();
+            foreach (var t in tables)
+            {
+                var txt = t.Count >= 0 ? $"{t.Name} ({t.Count})" : $"{t.Name} (count error)";
+                var item = new ListBoxItem { Content = txt, Tag = t.Name };
+                listItems.Add(item);
+            }
+            listBox.ItemsSource = listItems;
+
+            var viewBtn = new Button { Content = "Просмотреть топ 1000", Width = 160, IsEnabled = false };
+            var closeBtn = new Button { Content = "Закрыть", Width = 120 };
+
+            listBox.SelectionChanged += (_, __) => { viewBtn.IsEnabled = listBox.SelectedItem != null; };
+            viewBtn.Click += async (_, __) =>
+            {
+                if (listBox.SelectedItem is ListBoxItem lbi && lbi.Tag is string tbl)
+                {
+                    await ShowTableTopRowsAsync(tbl);
+                }
+            };
+
+            var dialog = new Window
+            {
+                Title = "Database tables",
+                Width = 600,
+                Height = 420,
+                Content = new StackPanel
+                {
+                    Margin = new Thickness(10),
+                    Children =
+                    {
+                        new TextBlock { Text = "Выберите таблицу для просмотра (первые 1000 строк):", FontWeight = Avalonia.Media.FontWeight.Bold, Margin = new Thickness(0,0,0,8) },
+                        listBox,
+                        new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Thickness(0,8,0,0), Children = { viewBtn, closeBtn } }
+                    }
+                }
+            };
+            // attach close handler after dialog is created
+            closeBtn.Click += (_, __) => dialog.Close();
+            var owner = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime d
+                ? d.MainWindow as Window
+                : null;
+
+            await dialog.ShowDialog(owner!);
         }
         catch { }
+    }
+
+    private async Task ShowTableTopRowsAsync(string tableName)
+    {
+        if (_coreDbInstance == null) return;
+
+        try
+        {
+            var sb = new StringBuilder();
+            using var conn = _coreDbInstance.OpenConnection();
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            // limit to 1000 rows
+            cmd.CommandText = $"SELECT * FROM \"{tableName}\" LIMIT 1000;";
+            using var rdr = cmd.ExecuteReader();
+            var cols = new List<string>();
+            for (int i = 0; i < rdr.FieldCount; i++) cols.Add(rdr.GetName(i));
+
+            // header
+            sb.AppendLine(string.Join(" | ", cols));
+
+            int row = 0;
+            while (rdr.Read())
+            {
+                var vals = new string[rdr.FieldCount];
+                for (int i = 0; i < rdr.FieldCount; i++)
+                {
+                    try
+                    {
+                        if (rdr.IsDBNull(i)) vals[i] = "NULL";
+                        else
+                        {
+                            var o = rdr.GetValue(i);
+                            vals[i] = o?.ToString() ?? string.Empty;
+                        }
+                    }
+                    catch { vals[i] = "(err)"; }
+                }
+                sb.AppendLine(string.Join(" | ", vals));
+                row++;
+            }
+
+            if (row == 0) sb.AppendLine("(no rows)");
+
+            await ShowSystemSettingsAsync($"Table: {tableName}\n---\n" + sb.ToString());
+        }
+        catch (Exception ex)
+        {
+            await ShowSystemSettingsAsync($"Error reading table {tableName}: {ex.Message}");
+        }
     }
 }

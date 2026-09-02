@@ -24,7 +24,6 @@
                            Margin="0,0,84,0"/>
                 <ComboBox ItemsSource="{Binding Stores}"
                           SelectedItem="{Binding SelectedStore}"
-                          DisplayMemberBinding="{Binding ShopName}"
                           HorizontalAlignment="Stretch"
                           Height="56"
                           Padding="20,12"
@@ -33,7 +32,13 @@
                           BorderThickness="1"
                           FontFamily="Montserrat"
                           FontSize="20"
-                          VerticalContentAlignment="Center"/>
+                          VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding ShopName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
             </DockPanel>
 
             <DockPanel LastChildFill="True" Height="56" Margin="0,24,0,0">
@@ -104,6 +109,23 @@
                     <TextBlock Text="Завантажити t_bar з мастера"
                                Foreground="#009CDF"
                                FontSize="20"
+                               FontFamily="Montserrat"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Button>
+
+                <Button Width="320" Height="90"
+                        Cursor="Hand"
+                        Click="ShowProductsImport_Click"
+                        Background="#F3F3F3"
+                        BorderBrush="#009CDF"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Padding="0">
+                    <TextBlock Text="Завантажити продукти (Products.json.gz)"
+                               Foreground="#009CDF"
+                               FontSize="18"
                                FontFamily="Montserrat"
                                FontWeight="Bold"
                                HorizontalAlignment="Center"

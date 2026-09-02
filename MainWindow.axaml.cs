@@ -110,6 +110,80 @@ public partial class MainWindow : Window
                 info.SetProduct(product);
                 ProductInfoFrame.Content = info;
                 ShowFrame(ProductInfoFrame);
+                // If image path is a URL (starts with http), download in background and update DB/UI
+                if (!string.IsNullOrWhiteSpace(product.ImagePath) &&
+                    (product.ImagePath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || product.ImagePath.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var app = Avalonia.Application.Current as App;
+                            var http = new System.Net.Http.HttpClient();
+                            var imgUrl = product.ImagePath!;
+                            var imgBytes = await http.GetByteArrayAsync(imgUrl);
+                            var imagesDir = System.IO.Path.Combine(Environment.CurrentDirectory, "images");
+                            System.IO.Directory.CreateDirectory(imagesDir);
+                            var ext = System.IO.Path.GetExtension(new Uri(imgUrl).AbsolutePath);
+                            if (string.IsNullOrWhiteSpace(ext)) ext = ".jpg";
+                            var fileName = product.Barcode + ext;
+                            var savePath = System.IO.Path.Combine(imagesDir, fileName);
+                            await System.IO.File.WriteAllBytesAsync(savePath, imgBytes);
+
+                            // Update DB record
+                            app?.LocalDb?.UpsertProducts(new[] { new PriceCheckerAvalonia.Core.Model.Product
+                            {
+                                Barcode = product.Barcode,
+                                ImagePath = savePath,
+                                Id = product.Id,
+                                Article = product.Article,
+                                Name = product.Name,
+                                Price = product.Price,
+                                Category = product.Category,
+                                Country = product.Country,
+                                Brand = product.Brand,
+                                ProductType = product.ProductType,
+                                StockQty = product.StockQty,
+                                UpdatedAt = DateTime.UtcNow
+                            }});
+
+                            // Refresh UI on main thread
+                            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                            {
+                                // Ensure the file is flushed by the background task; small retry loop
+                                var imagesDir = System.IO.Path.Combine(Environment.CurrentDirectory, "images");
+                                var ext = System.IO.Path.GetExtension(new Uri(imgUrl).AbsolutePath);
+                                if (string.IsNullOrWhiteSpace(ext)) ext = ".jpg";
+                                var fileName = product.Barcode + ext;
+                                var savePath = System.IO.Path.Combine(imagesDir, fileName);
+
+                                // Try to load the file a few times if it's still being written
+                                for (int i = 0; i < 5; i++)
+                                {
+                                    if (System.IO.File.Exists(savePath)) break;
+                                    await Task.Delay(100);
+                                }
+
+                                // If current frame holds ProductInfo, update its image directly
+                                if (ProductInfoFrame.Content is PriceCheckerAvalonia.Views.ProductInfo pi)
+                                {
+                                    pi.SetImageFromFile(savePath);
+                                }
+
+                                // Also refresh product data in DB and update text fields if needed
+                                var updated = app?.LocalDb?.FindByBarcode(product.Barcode);
+                                if (updated != null && ProductInfoFrame.Content is PriceCheckerAvalonia.Views.ProductInfo pi2)
+                                {
+                                    pi2.SetProduct(updated);
+                                }
+                            });
+                        }
+                        catch
+                        {
+                            // ignore background download errors
+                        }
+                    });
+                }
             }
             else
             {
@@ -210,7 +284,8 @@ public partial class MainWindow : Window
             }
             else
             {
-                _ = AnimateFadeOut(frame);
+                frame.IsVisible = false;
+                //_ = AnimateFadeOut(frame);
             }
         }
     }
