@@ -13,6 +13,8 @@ using Microsoft.Data.Sqlite;
 using Avalonia.Styling;
 using PriceCheckerAvalonia.ViewModels;
 using PriceCheckerAvalonia.Core.Services;
+using System.Reflection;
+using PriceCheckerAvalonia.Core.Model;
 
 namespace PriceCheckerAvalonia.Views;
 
@@ -236,6 +238,47 @@ public partial class Settings : UserControl
             }
         }
         catch { }
+    }
+
+    private async void CheckUpdates_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        try
+        {
+            var app = Avalonia.Application.Current as App;
+            var checker = app?.UpdateChecker;
+            if (checker == null)
+            {
+                await ShowSystemSettingsAsync("Update checker not initialized.");
+                return;
+            }
+
+            const string serverUrl = "https://your-update-server.example.com"; // TODO: заменить на реальный URL
+            var platform = PriceCheckerAvalonia.Core.Services.PlatformHelper.GetPlatformString();
+            var info = await checker.CheckForUpdateAsync(serverUrl, channel: "stable", platform: platform);
+            if (info == null)
+            {
+                await ShowSystemSettingsAsync("Оновлень не знайдено. Ваша версія актуальна.");
+                return;
+            }
+
+            var current = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "0.0.0";
+            if (!VersionHelper.IsNewerVersion(info.Version, current))
+            {
+                await ShowSystemSettingsAsync("Оновлень не знайдено. Ваша версія актуальна.");
+                return;
+            }
+
+            var owner = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime d
+                ? d.MainWindow as Window
+                : null;
+
+            var wnd = new UpdateWindow(info, checker);
+            await wnd.ShowDialog(owner!);
+        }
+        catch (Exception ex)
+        {
+            await ShowSystemSettingsAsync($"Помилка при перевірці оновлень: {ex.Message}");
+        }
     }
 
     private async void ShowSystemSettings_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)

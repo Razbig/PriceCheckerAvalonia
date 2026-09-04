@@ -132,6 +132,23 @@
                                VerticalAlignment="Center"/>
                 </Button>
 
+                <Button Width="300" Height="90"
+                        Cursor="Hand"
+                        Click="CheckUpdates_Click"
+                        Background="White"
+                        BorderBrush="#009CDF"
+                        BorderThickness="2"
+                        CornerRadius="16"
+                        Padding="0">
+                    <TextBlock Text="Перевірити оновлення"
+                               Foreground="#009CDF"
+                               FontSize="20"
+                               FontFamily="Montserrat"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Button>
+
                 <Button Width="266" Height="90"
                         Cursor="Hand"
                         Click="SaveSettings_Click"
