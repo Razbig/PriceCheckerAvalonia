@@ -1,16 +1,14 @@
 using System;
-using System.Diagnostics;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Threading;
-using PriceCheckerAvalonia.Core.Model;
-using PriceCheckerAvalonia.Core.Services;
-using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
+using Velopack;
+using PriceCheckerAvalonia.Services;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace PriceCheckerAvalonia
 {
@@ -21,167 +19,134 @@ namespace PriceCheckerAvalonia
         private readonly ProgressBar _progress;
         private readonly Button _downloadButton;
         private readonly Button _laterButton;
-        private readonly UpdateInfo _info;
-        private readonly UpdateChecker _checker;
+        private readonly Velopack.UpdateInfo _info;
+        private readonly UpdateService _updateService;
 
-        public UpdateWindow(UpdateInfo info, UpdateChecker checker)
+        public UpdateWindow(
+            Velopack.UpdateInfo info,
+            UpdateService updateService)
         {
             _info = info ?? throw new ArgumentNullException(nameof(info));
-            _checker = checker ?? throw new ArgumentNullException(nameof(checker));
+            _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
 
-            Title = "Доступно обновление";
+            Title = "Доступне оновлення";
             Width = 700;
             Height = 500;
             CanResize = false;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
-            var panel = new StackPanel { Margin = new Thickness(16), Spacing = 12 };
-            _header = new TextBlock { FontSize = 18, FontWeight = Avalonia.Media.FontWeight.Bold };
-            _header.Text = $"Новая версия: {_info.Version}";
+            var panel = new StackPanel
+            {
+                Margin = new Thickness(16),
+                Spacing = 12
+            };
+
+            _header = new TextBlock
+            {
+                FontSize = 18,
+                FontWeight = Avalonia.Media.FontWeight.Bold,
+                Text = $"Нова версія: {_info.TargetFullRelease.Version}"
+            };
+
             panel.Children.Add(_header);
 
-            _notes = new TextBlock();
-            _notes.Text = _info.Notes ?? string.Empty;
-            var sv = new ScrollViewer { Content = _notes, Height = 250 };
-            panel.Children.Add(sv);
+            _notes = new TextBlock
+            {
+                Text = string.Empty
+            };
 
-            _progress = new ProgressBar { Minimum = 0, Maximum = 1, Value = 0, Height = 18, IsVisible = false };
+            var scrollViewer = new ScrollViewer
+            {
+                Content = _notes,
+                Height = 250
+            };
+
+            panel.Children.Add(scrollViewer);
+
+            _progress = new ProgressBar
+            {
+                Minimum = 0,
+                Maximum = 100,
+                Value = 0,
+                Height = 18,
+                IsVisible = false
+            };
+
             panel.Children.Add(_progress);
 
-            var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Spacing = 8 };
-            _laterButton = new Button { Content = "Позже" };
+            var buttons = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Spacing = 8
+            };
+
+            _laterButton = new Button
+            {
+                Content = "Пізніше"
+            };
+
             _laterButton.Click += LaterButton_Click;
             buttons.Children.Add(_laterButton);
-            _downloadButton = new Button { Content = "Скачать и установить" };
+
+            _downloadButton = new Button
+            {
+                Content = "Завантажити та встановити"
+            };
+
             _downloadButton.Click += DownloadButton_Click;
             buttons.Children.Add(_downloadButton);
+
             panel.Children.Add(buttons);
 
             Content = panel;
         }
 
-        private void LaterButton_Click(object? sender, RoutedEventArgs e)
+        private void LaterButton_Click(
+            object? sender,
+            RoutedEventArgs e)
         {
             Close();
         }
 
-        private async void DownloadButton_Click(object? sender, RoutedEventArgs e)
+        private async void DownloadButton_Click(
+            object? sender,
+            RoutedEventArgs e)
         {
             _downloadButton.IsEnabled = false;
             _laterButton.IsEnabled = false;
             _progress.IsVisible = true;
 
-            var tmp = Path.Combine(Path.GetTempPath(), "PriceCheckerUpdates");
             try
             {
-                var progress = new Progress<double>(p =>
+                var progress = new Action<int>(percent =>
                 {
-                    Dispatcher.UIThread.Post(() => { _progress.Value = p; });
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        _progress.Value = percent;
+                    });
                 });
 
-                var path = await _checker.DownloadUpdateAsync(_info, tmp, progress, CancellationToken.None).ConfigureAwait(false);
+                var downloaded = await _updateService
+                    .DownloadUpdateAsync(
+                        _info,
+                        progress,
+                        CancellationToken.None);
 
-                // Запустить инсталлятор или показать папку
-                try
+                if (!downloaded)
                 {
-                    var ext = Path.GetExtension(path)?.ToLowerInvariant() ?? string.Empty;
-                    if (PriceCheckerAvalonia.Core.Services.PlatformHelper.IsWindows())
-                    {
-                        if (ext == ".exe" || ext == ".msi" || ext == ".bat")
-                        {
-                            var psi = new ProcessStartInfo(path) { UseShellExecute = true };
-                            Process.Start(psi);
-                            if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime life)
-                                life.Shutdown();
-                        }
-                        else
-                        {
-                            // show in explorer
-                            Process.Start(new ProcessStartInfo("explorer", $"/select,\"{path}\"") { UseShellExecute = true });
-                        }
-                    }
-                    else if (PriceCheckerAvalonia.Core.Services.PlatformHelper.IsLinux())
-                    {
-                        if (ext == ".appimage")
-                        {
-                            // make executable then run
-                            try
-                            {
-                                Process.Start(new ProcessStartInfo("chmod", $"+x \"{path}\"") { UseShellExecute = false });
-                            }
-                            catch { }
-                            try
-                            {
-                                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
-                                if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime life)
-                                    life.Shutdown();
-                            }
-                            catch { }
-                        }
-                        else if (ext == ".deb" || ext == ".rpm")
-                        {
-                            // Show instruction dialog (installation requires privileges)
-                            await Dispatcher.UIThread.InvokeAsync(() =>
-                            {
-                                var dlg = new Window { Title = "Установка пакета", Width = 480, Height = 160, WindowStartupLocation = WindowStartupLocation.CenterOwner };
-                                var tb = new TextBlock { Text = $"Пакет скачан: {path}\nДля установки откройте терминал и выполните: sudo dpkg -i \"{path}\"", Margin = new Thickness(12) };
-                                var ok = new Button { Content = "Открыть папку", HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(12) };
-                                ok.Click += (_, _) =>
-                                {
-                                    try { Process.Start(new ProcessStartInfo("xdg-open", $"\"{System.IO.Path.GetDirectoryName(path)}\"") { UseShellExecute = true }); } catch { }
-                                    dlg.Close();
-                                };
-                                var sp = new StackPanel();
-                                sp.Children.Add(tb);
-                                sp.Children.Add(ok);
-                                dlg.Content = sp;
-                                dlg.ShowDialog(this);
-                            });
-                        }
-                        else
-                        {
-                            // generic: open folder
-                            try { Process.Start(new ProcessStartInfo("xdg-open", $"\"{System.IO.Path.GetDirectoryName(path)}\"") { UseShellExecute = true }); } catch { }
-                        }
-                    }
-                    else if (PriceCheckerAvalonia.Core.Services.PlatformHelper.IsMac())
-                    {
-                        if (ext == ".dmg" || ext == ".pkg")
-                        {
-                            try { Process.Start(new ProcessStartInfo("open", $"\"{path}\"") { UseShellExecute = true }); } catch { }
-                        }
-                        else
-                        {
-                            try { Process.Start(new ProcessStartInfo("open", $"\"{System.IO.Path.GetDirectoryName(path)}\"") { UseShellExecute = true }); } catch { }
-                        }
-                    }
-                    else
-                    {
-                        // Fallback: open folder
-                        try { Process.Start(new ProcessStartInfo("xdg-open", $"\"{System.IO.Path.GetDirectoryName(path)}\"") { UseShellExecute = true }); } catch { }
-                    }
-                }
-                catch
-                {
-                    // ignore launch errors
+                    await ShowErrorAsync(
+                        "Не вдалося завантажити оновлення.");
+
+                    return;
                 }
 
-                Close();
+                _updateService.ApplyUpdateAndRestart(_info);
             }
             catch (Exception ex)
             {
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    var dlg = new Window { Title = "Ошибка", Width = 400, Height = 160, WindowStartupLocation = WindowStartupLocation.CenterOwner };
-                    var tb = new TextBlock { Text = "Ошибка загрузки обновления: " + ex.Message, Margin = new Thickness(12) };
-                    var ok = new Button { Content = "Ок", HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(12) };
-                    ok.Click += (_, _) => dlg.Close();
-                    var sp = new StackPanel();
-                    sp.Children.Add(tb);
-                    sp.Children.Add(ok);
-                    dlg.Content = sp;
-                    dlg.ShowDialog(this);
-                });
+                await ShowErrorAsync(
+                    $"Помилка оновлення: {ex.Message}");
             }
             finally
             {
@@ -189,6 +154,47 @@ namespace PriceCheckerAvalonia
                 _laterButton.IsEnabled = true;
                 _progress.IsVisible = false;
             }
+        }
+
+        private async Task ShowErrorAsync(string message)
+        {
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                var dlg = new Window
+                {
+                    Title = "Помилка",
+                    Width = 450,
+                    Height = 180,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+
+                var okButton = new Button
+                {
+                    Content = "OK",
+                    Width = 100,
+                    HorizontalAlignment = HorizontalAlignment.Right
+                };
+
+                var panel = new StackPanel
+                {
+                    Margin = new Thickness(12),
+                    Spacing = 12
+                };
+
+                panel.Children.Add(new TextBlock
+                {
+                    Text = message,
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                });
+
+                panel.Children.Add(okButton);
+
+                dlg.Content = panel;
+
+                okButton.Click += (_, _) => dlg.Close();
+
+                await dlg.ShowDialog(this!);
+            });
         }
     }
 }

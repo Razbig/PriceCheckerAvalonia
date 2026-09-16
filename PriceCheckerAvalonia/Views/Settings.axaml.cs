@@ -245,39 +245,37 @@ public partial class Settings : UserControl
         try
         {
             var app = Avalonia.Application.Current as App;
-            var checker = app?.UpdateChecker;
-            if (checker == null)
+            var updateService = app?.UpdateService;
+
+            if (updateService == null)
             {
-                await ShowSystemSettingsAsync("Update checker not initialized.");
+                await ShowSystemSettingsAsync("Update service not initialized.");
                 return;
             }
 
-            const string serverUrl = "https://your-update-server.example.com"; // TODO: заменить на реальный URL
-            var platform = PriceCheckerAvalonia.Core.Services.PlatformHelper.GetPlatformString();
-            var info = await checker.CheckForUpdateAsync(serverUrl, channel: "stable", platform: platform);
+            var info = await updateService.CheckForUpdatesAsync();
+
             if (info == null)
             {
-                await ShowSystemSettingsAsync("Оновлень не знайдено. Ваша версія актуальна.");
+                await ShowSystemSettingsAsync(
+                    "Оновлень не знайдено. Ваша версія актуальна.");
                 return;
             }
 
-            var current = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "0.0.0";
-            if (!VersionHelper.IsNewerVersion(info.Version, current))
-            {
-                await ShowSystemSettingsAsync("Оновлень не знайдено. Ваша версія актуальна.");
-                return;
-            }
+            var owner =
+                Avalonia.Application.Current?.ApplicationLifetime
+                    is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime d
+                    ? d.MainWindow as Window
+                    : null;
 
-            var owner = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime d
-                ? d.MainWindow as Window
-                : null;
+            var wnd = new UpdateWindow(info, updateService);
 
-            var wnd = new UpdateWindow(info, checker);
             await wnd.ShowDialog(owner!);
         }
         catch (Exception ex)
         {
-            await ShowSystemSettingsAsync($"Помилка при перевірці оновлень: {ex.Message}");
+            await ShowSystemSettingsAsync(
+                $"Помилка при перевірці оновлень: {ex.Message}");
         }
     }
 

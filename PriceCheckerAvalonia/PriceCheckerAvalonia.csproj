@@ -3,6 +3,12 @@
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
+		
+		<ApplicationVersion>1.0.0</ApplicationVersion>
+		<Version>1.0.0</Version>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<FileVersion>1.0.0.0</FileVersion>
+		
 		<ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
 	</PropertyGroup>
@@ -37,6 +43,7 @@
 		<PackageReference Include="Npgsql" Version="10.0.2" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
 		<PackageReference Include="Dapper" Version="2.1.79" />
+		<PackageReference Include="Velopack" Version="1.2.0" />
 	</ItemGroup>
 
 	<ItemGroup>
