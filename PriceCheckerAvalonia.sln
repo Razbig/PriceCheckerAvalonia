@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceCheckerAvalonia", "PriceCheckerAvalonia.csproj", "{DED64C91-9825-474E-BB2B-1B8FE420CC71}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceCheckerAvalonia", "PriceCheckerAvalonia\PriceCheckerAvalonia.csproj", "{DED64C91-9825-474E-BB2B-1B8FE420CC71}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceCheckerAvalonia.Core", "..\PriceCheckerAvalonia.Core\PriceCheckerAvalonia.Core.csproj", "{4FD7C6BD-C5E6-4815-A007-96E54A6C6700}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceCheckerAvalonia.Core", "PriceCheckerAvalonia.Core\PriceCheckerAvalonia.Core.csproj", "{4FD7C6BD-C5E6-4815-A007-96E54A6C6700}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
