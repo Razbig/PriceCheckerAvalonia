@@ -65,11 +65,11 @@ namespace PriceCheckerAvalonia.Core.Services
                         await using var barConn = new NpgsqlConnection(barConnStr);
                         await barConn.OpenAsync(ct);
 
-                        var bars = (await barConn.QueryAsync<Bar>("""
-                            SELECT id_bar AS IdBar, id_article AS IdArticle, id_measure AS IdMeasure,
-                                   bar AS BarValue, dtype AS Dtype, memo AS Memo
+                        var bars = (await barConn.QueryAsync<t_bar>("""
+                            SELECT id_bar AS id_bar, id_article AS id_article, id_measure AS id_measure,
+                                   bar AS bar, dtype AS dtype, memo AS memo
                               FROM public.t_bar
-                        """ )).ToList();
+                        """)).ToList();
 
                         result.BarsFetched = bars.Count;
                         if (bars.Any())

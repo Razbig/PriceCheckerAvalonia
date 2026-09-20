@@ -16,10 +16,7 @@ namespace PriceCheckerAvalonia.Services
 
         public UpdateService()
         {
-            var source = new GithubSource(
-                GitHubRepositoryUrl,
-                null,
-                false);
+            var source = new GithubSource(GitHubRepositoryUrl,null,false);
 
             _updateManager = new UpdateManager(source);
         }
@@ -41,8 +38,7 @@ namespace PriceCheckerAvalonia.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(
-                    $"[UpdateService] CheckForUpdatesAsync error: {ex}");
+                Debug.WriteLine($"[UpdateService] CheckForUpdatesAsync error: {ex}");
 
                 return null;
             }
@@ -71,8 +67,7 @@ namespace PriceCheckerAvalonia.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(
-                    $"[UpdateService] DownloadUpdateAsync error: {ex}");
+                Debug.WriteLine($"[UpdateService] DownloadUpdateAsync error: {ex}");
 
                 return false;
             }
@@ -86,8 +81,7 @@ namespace PriceCheckerAvalonia.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(
-                    $"[UpdateService] ApplyUpdateAndRestart error: {ex}");
+                Debug.WriteLine($"[UpdateService] ApplyUpdateAndRestart error: {ex}");
             }
         }
 

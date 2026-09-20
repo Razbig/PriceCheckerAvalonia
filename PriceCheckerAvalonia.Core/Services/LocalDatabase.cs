@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using PriceCheckerAvalonia.Core.Model;
@@ -50,29 +51,33 @@ namespace PriceCheckerAvalonia.Core.Services
             return rows.AsList();
         }
 
+        private const int CurrentDbVersion = 3;
+
         private void InitializeSchema()
         {
             using var conn = OpenConnection();
+            conn.Open();
             conn.Execute("PRAGMA journal_mode=WAL;");
             conn.Execute("PRAGMA synchronous=NORMAL;");
             conn.Execute("PRAGMA foreign_keys=ON;");
 
             conn.Execute("""
                 CREATE TABLE IF NOT EXISTS products (
-                    id          INTEGER PRIMARY KEY,
-                    barcode     TEXT NOT NULL UNIQUE,
-                    name        TEXT NOT NULL,
-                    price       REAL NOT NULL,
-                    category    TEXT,
-                    country     TEXT,
-                    brand       TEXT,
-                    product_type TEXT,
-                    stock_qty   INTEGER DEFAULT 0,
-                    image_path  TEXT,
-                    updated_at  TEXT NOT NULL
+                    id            INTEGER PRIMARY KEY,
+                    barcode       TEXT NOT NULL UNIQUE,
+                    name          TEXT NOT NULL,
+                    price         REAL NOT NULL,
+                    category      TEXT,
+                    country       TEXT,
+                    brand         TEXT,
+                    product_type  TEXT,
+                    stock_qty     INTEGER DEFAULT 0,
+                    image_path    TEXT,
+                    updated_at    TEXT NOT NULL
                 );
 
-                CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode);
+                CREATE INDEX IF NOT EXISTS idx_products_barcode
+                    ON products(barcode);
 
                 CREATE TABLE IF NOT EXISTS sync_meta (
                     key   TEXT PRIMARY KEY,
@@ -85,16 +90,75 @@ namespace PriceCheckerAvalonia.Core.Services
                     id_measure INTEGER NOT NULL,
                     bar        TEXT,
                     dtype      INTEGER,
-                    memo       TEXT
+                    memo       TEXT,
+                    price      REAL
                 );
-                CREATE INDEX IF NOT EXISTS idx_t_bar_id_article ON t_bar(id_article);
 
-                -- Добавлено: таблица stores
+                CREATE INDEX IF NOT EXISTS idx_t_bar_id_article
+                    ON t_bar(id_article);
+
                 CREATE TABLE IF NOT EXISTS stores (
                     shop_id   INTEGER PRIMARY KEY,
                     shop_name TEXT NOT NULL
                 );
             """);
+
+            ApplyMigrations(conn);
+        }
+
+        private void ApplyMigrations(IDbConnection conn)
+        {
+            var versionString = conn.QuerySingleOrDefault<string>(
+                "SELECT value FROM sync_meta WHERE key = 'db_version';");
+
+            // Якщо db_version відсутній — це стара БД версії 1
+            int version = int.TryParse(versionString, out var v) ? v : 1;
+
+            // v1 -> v2
+            if (version < 3)
+            {
+                using var tx = conn.BeginTransaction();
+
+                try
+                {
+                    conn.Execute("""
+                ALTER TABLE t_bar ADD COLUMN price REAL;
+            """, transaction: tx);
+
+                    conn.Execute("""
+                INSERT INTO sync_meta (key, value)
+                VALUES ('db_version', '3')
+                ON CONFLICT(key) DO UPDATE
+                SET value = excluded.value;
+            """, transaction: tx);
+
+                    tx.Commit();
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
+                }
+
+                version = 3;
+            }
+
+            if (version != CurrentDbVersion)
+            {
+                throw new InvalidOperationException(
+                    $"Непідтримувана версія локальної БД: {version}. " +
+                    $"Очікується: {CurrentDbVersion}.");
+            }
+        }
+
+        private static void SetDbVersion(IDbConnection conn, int version)
+        {
+            conn.Execute("""
+        INSERT INTO sync_meta (key, value)
+        VALUES ('db_version', @Version)
+        ON CONFLICT(key) DO UPDATE
+        SET value = excluded.value;
+    """, new { Version = version });
         }
 
         public SqliteConnection OpenConnection()
@@ -107,31 +171,161 @@ namespace PriceCheckerAvalonia.Core.Services
 
             barcode = barcode.Trim();
 
+            if (barcode.StartsWith("29") && barcode.Length >= 7)
+                barcode = barcode.Substring(2, 5);
+
             using var conn = OpenConnection();
-            // Try to find product by direct barcode match in products, or by t_bar.bar (joined by article)
-            // Return a single product row and, if available, the article from t_bar as Article property.
+
             return conn.QueryFirstOrDefault<Product>(
-                @"SELECT
-                    p.id        AS Id,
-                    b.id_article AS Article,
-                    p.barcode   AS Barcode,
-                    p.name      AS Name,
-                    p.price     AS Price,
-                    p.category  AS Category,
-                    p.country   AS Country,
-                    p.brand     AS Brand,
-                    p.product_type AS ProductType,
-                    p.stock_qty AS StockQty,
-                    p.image_path AS ImagePath,
-                    p.updated_at AS UpdatedAt
-                  FROM  t_bar b
-                  LEFT JOIN products p ON b.id_article = p.barcode
-                  WHERE b.bar = @barcode
-                  LIMIT 1",
+                """
+        SELECT
+            p.id AS Id,
+            tb.id_article AS Article,
+            p.barcode AS Barcode,
+            p.name AS Name,
+
+            CASE
+                WHEN
+                    tb.memo NOT LIKE '%Card=%'
+                    AND date('now') BETWEEN
+                        date(
+                            substr(period, 7, 4) || '-' ||
+                            substr(period, 4, 2) || '-' ||
+                            substr(period, 1, 2)
+                        )
+                        AND
+                        date(
+                            substr(period, 18, 4) || '-' ||
+                            substr(period, 15, 2) || '-' ||
+                            substr(period, 12, 2)
+                        )
+                    AND date(
+                        substr(period, 18, 4) || '-' ||
+                        substr(period, 15, 2) || '-' ||
+                        substr(period, 12, 2)
+                    ) < date('2030-01-01')
+                    AND day > 0
+                THEN day
+
+                WHEN
+                    tb.memo NOT LIKE '%Card=%'
+                    AND date('now') BETWEEN
+                        date(
+                            substr(period, 7, 4) || '-' ||
+                            substr(period, 4, 2) || '-' ||
+                            substr(period, 1, 2)
+                        )
+                        AND
+                        date(
+                            substr(period, 18, 4) || '-' ||
+                            substr(period, 15, 2) || '-' ||
+                            substr(period, 12, 2)
+                        )
+                    AND date(
+                        substr(period, 18, 4) || '-' ||
+                        substr(period, 15, 2) || '-' ||
+                        substr(period, 12, 2)
+                    ) < date('2030-01-01')
+                    AND day < 0
+                THEN ROUND(tb.price * ((100 + day) / 100.0), 2)
+
+                ELSE tb.price
+            END AS Price,
+
+            CASE
+                WHEN
+                    tb.memo NOT LIKE '%Card=%'
+                    AND date('now') BETWEEN
+                        date(
+                            substr(period, 7, 4) || '-' ||
+                            substr(period, 4, 2) || '-' ||
+                            substr(period, 1, 2)
+                        )
+                        AND
+                        date(
+                            substr(period, 18, 4) || '-' ||
+                            substr(period, 15, 2) || '-' ||
+                            substr(period, 12, 2)
+                        )
+                    AND date(
+                        substr(period, 18, 4) || '-' ||
+                        substr(period, 15, 2) || '-' ||
+                        substr(period, 12, 2)
+                    ) < date('2030-01-01')
+                    AND day != 0
+                THEN tb.price
+
+                ELSE 0
+            END AS PriceOld,
+
+            CASE
+                WHEN
+                    tb.memo NOT LIKE '%Card=%'
+                    AND date('now') BETWEEN
+                        date(
+                            substr(period, 7, 4) || '-' ||
+                            substr(period, 4, 2) || '-' ||
+                            substr(period, 1, 2)
+                        )
+                        AND
+                        date(
+                            substr(period, 18, 4) || '-' ||
+                            substr(period, 15, 2) || '-' ||
+                            substr(period, 12, 2)
+                        )
+                    AND day != 0
+                THEN 'Товар по акції'
+
+                ELSE ''
+            END AS Loyalty,
+
+            p.category AS Category,
+            p.country AS Country,
+            p.brand AS Brand,
+            p.product_type AS ProductType,
+            p.stock_qty AS StockQty,
+            p.image_path AS ImagePath,
+            p.updated_at AS UpdatedAt
+
+        FROM t_bar tb
+
+        LEFT JOIN products p
+            ON tb.id_article = p.barcode
+
+        LEFT JOIN (
+            SELECT
+                id_bar,
+
+                CAST(
+                    substr(
+                        memo,
+                        instr(memo, '$Day=') + 5,
+                        instr(
+                            substr(memo, instr(memo, '$Day=') + 5),
+                            ';'
+                        ) - 1
+                    ) AS REAL
+                ) AS day,
+
+                substr(
+                    substr(
+                        memo,
+                        instr(memo, '$DayPeriod=') + 11
+                    ),
+                    1,
+                    21
+                ) AS period
+
+            FROM t_bar
+        ) promo
+            ON promo.id_bar = tb.id_bar
+
+        WHERE tb.bar = @barcode
+
+        LIMIT 1
+        """,
                 new { barcode });
         }
-        //WHERE p.barcode = @barcode OR b.bar = @barcode
-
 
         public DateTime GetLastSyncTime()
         {
@@ -254,7 +448,7 @@ namespace PriceCheckerAvalonia.Core.Services
             }
         }
 
-        public void UpsertBars(IEnumerable<Bar> bars)
+        public void UpsertBars(IEnumerable<t_bar> bars)
         {
             using var conn = OpenConnection();
             conn.Open();
@@ -265,15 +459,16 @@ namespace PriceCheckerAvalonia.Core.Services
                 {
                     conn.Execute("""
                         INSERT INTO t_bar
-                            (id_bar, id_article, id_measure, bar, dtype, memo)
+                            (id_bar, id_article, id_measure, bar, dtype, memo, price)
                         VALUES
-                            (@IdBar, @IdArticle, @IdMeasure, @BarValue, @Dtype, @Memo)
+                            (@id_bar, @id_article, @id_measure, @bar, @dtype, @memo, @price)
                         ON CONFLICT(id_bar) DO UPDATE SET
                             id_article = excluded.id_article,
                             id_measure = excluded.id_measure,
                             bar        = excluded.bar,
                             dtype      = excluded.dtype,
-                            memo       = excluded.memo
+                            memo       = excluded.memo,
+                            price       = excluded.price
                     """, b, tx);
                 }
                 tx.Commit();
