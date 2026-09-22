@@ -3,32 +3,100 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="Transparent">
 
-    <Grid>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+    <UserControl.Styles>
+        <!-- Цифрові клавіші: фон #F3F3F3, текст синій #009CDF, шрифт Montserrat Alternates -->
+        <Style Selector="Button.KeypadButton">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Foreground" Value="#009CDF" />
+            <Setter Property="FontFamily" Value="Montserrat Alternates" />
+            <Setter Property="FontSize" Value="36" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
 
-            <TextBlock Text="Вхід для асистента"
-                       FontSize="54" FontWeight="Bold"
-                       Foreground="{DynamicResource ColorAccentWiolet}"
-                       TextAlignment="Center"
-                       Width="1200"
-                       TextWrapping="Wrap"/>
+        <!-- Клавіші дії (ОК / ⌫): фон #E3EFF4, текст темний, шрифт звичайний Montserrat Bold -->
+        <Style Selector="Button.KeypadButton.ActionKey">
+            <Setter Property="Background" Value="#E3EFF4" />
+            <Setter Property="Foreground" Value="#202123" />
+            <Setter Property="FontFamily" Value="Montserrat" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+    </UserControl.Styles>
 
-            <TextBlock Text="Відскануйте свій бейдж, щоб продовжити роботу"
-                       FontSize="32" FontWeight="Medium"
-                       Foreground="{DynamicResource ColorDarkText}"
-                       TextAlignment="Center"
-                       Margin="0,30,0,80"/>
+    <Grid RowDefinitions="Auto,*" Margin="80,35">
+        <TextBlock Grid.Row="0" Text="Вхід для асистента"
+                   FontSize="54" FontWeight="Bold"
+                   Foreground="{DynamicResource ColorAccentWiolet}"
+                   TextAlignment="Center"
+                   HorizontalAlignment="Center" />
 
-            <Grid Width="400" Height="400">
+        <Grid Grid.Row="1" Width="1130" ColumnDefinitions="760,320" ColumnSpacing="50"
+              HorizontalAlignment="Center" Margin="0,25,0,0">
+            <StackPanel Grid.Column="0"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Spacing="18">
+                <TextBlock Text="Введіть PIN-код або відскануйте свій бейдж"
+                           FontSize="24" FontWeight="Medium"
+                           Foreground="{DynamicResource ColorDarkText}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           MaxWidth="700" />
+
+                <TextBox x:Name="PinCodeTextBox"
+                         Width="760"
+                         Height="60"
+                         FontSize="30"
+                         PasswordChar="●"
+                         Watermark="PIN-код"
+                         Background="White"
+                         BorderBrush="#8DD7F5"
+                         BorderThickness="1"
+                         CornerRadius="8"
+                         HorizontalContentAlignment="Center"
+                         HorizontalAlignment="Center"
+                         KeyDown="PinCodeTextBox_KeyDown" />
+
+                <!-- KeyBoard: 3 колонки x 4 ряди, gap між клавішами 9px, між рядами 30px -->
+                <Grid Width="760" Height="522"
+                      HorizontalAlignment="Center">
+                    <Grid Width="740" Height="462"
+                          RowDefinitions="93,93,93,93"
+                          ColumnDefinitions="*,*,*"
+                          RowSpacing="30"
+                          ColumnSpacing="9"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center">
+                        <Button Grid.Row="0" Grid.Column="0" Classes="KeypadButton" Content="1" Tag="1" Click="PinButton_Click" />
+                        <Button Grid.Row="0" Grid.Column="1" Classes="KeypadButton" Content="2" Tag="2" Click="PinButton_Click" />
+                        <Button Grid.Row="0" Grid.Column="2" Classes="KeypadButton" Content="3" Tag="3" Click="PinButton_Click" />
+                        <Button Grid.Row="1" Grid.Column="0" Classes="KeypadButton" Content="4" Tag="4" Click="PinButton_Click" />
+                        <Button Grid.Row="1" Grid.Column="1" Classes="KeypadButton" Content="5" Tag="5" Click="PinButton_Click" />
+                        <Button Grid.Row="1" Grid.Column="2" Classes="KeypadButton" Content="6" Tag="6" Click="PinButton_Click" />
+                        <Button Grid.Row="2" Grid.Column="0" Classes="KeypadButton" Content="7" Tag="7" Click="PinButton_Click" />
+                        <Button Grid.Row="2" Grid.Column="1" Classes="KeypadButton" Content="8" Tag="8" Click="PinButton_Click" />
+                        <Button Grid.Row="2" Grid.Column="2" Classes="KeypadButton" Content="9" Tag="9" Click="PinButton_Click" />
+                        <Button Grid.Row="3" Grid.Column="0" Classes="KeypadButton ActionKey" Content="ОК" Click="ConfirmPinButton_Click" />
+                        <Button Grid.Row="3" Grid.Column="1" Classes="KeypadButton" Content="0" Tag="0" Click="PinButton_Click" />
+                        <Button Grid.Row="3" Grid.Column="2" Classes="KeypadButton ActionKey" Content="⌫" Click="BackspacePinButton_Click" />
+                    </Grid>
+                </Grid>
+            </StackPanel>
+
+            <Grid Grid.Column="1" Width="320" Height="420"
+                  HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Image Source="/Assets/Assistant.png"
                        Stretch="Uniform"
                        RenderOptions.BitmapInterpolationMode="HighQuality"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>
-                <!-- RenderOptions.BitmapScalingMode → RenderOptions.BitmapInterpolationMode -->
             </Grid>
-
-        </StackPanel>
+        </Grid>
     </Grid>
 
 </UserControl>

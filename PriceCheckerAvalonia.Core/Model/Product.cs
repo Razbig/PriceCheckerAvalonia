@@ -10,6 +10,7 @@ namespace PriceCheckerAvalonia.Core.Model
         public string Barcode { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public double Price { get; set; }
+        public double PriceOld { get; set; }
         public string? Category { get; set; }
         public string? Country { get; set; }
         public string? Brand { get; set; }
@@ -17,5 +18,7 @@ namespace PriceCheckerAvalonia.Core.Model
         public int StockQty { get; set; }
         public string? ImagePath { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public string? Memo { get; set; }
+
     }
 }

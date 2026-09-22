@@ -176,109 +176,16 @@ namespace PriceCheckerAvalonia.Core.Services
 
             using var conn = OpenConnection();
 
-            return conn.QueryFirstOrDefault<Product>(
+            var product = conn.QueryFirstOrDefault<Product>(
                 """
         SELECT
             p.id AS Id,
             tb.id_article AS Article,
             p.barcode AS Barcode,
             p.name AS Name,
-
-            CASE
-                WHEN
-                    tb.memo NOT LIKE '%Card=%'
-                    AND date('now') BETWEEN
-                        date(
-                            substr(period, 7, 4) || '-' ||
-                            substr(period, 4, 2) || '-' ||
-                            substr(period, 1, 2)
-                        )
-                        AND
-                        date(
-                            substr(period, 18, 4) || '-' ||
-                            substr(period, 15, 2) || '-' ||
-                            substr(period, 12, 2)
-                        )
-                    AND date(
-                        substr(period, 18, 4) || '-' ||
-                        substr(period, 15, 2) || '-' ||
-                        substr(period, 12, 2)
-                    ) < date('2030-01-01')
-                    AND day > 0
-                THEN day
-
-                WHEN
-                    tb.memo NOT LIKE '%Card=%'
-                    AND date('now') BETWEEN
-                        date(
-                            substr(period, 7, 4) || '-' ||
-                            substr(period, 4, 2) || '-' ||
-                            substr(period, 1, 2)
-                        )
-                        AND
-                        date(
-                            substr(period, 18, 4) || '-' ||
-                            substr(period, 15, 2) || '-' ||
-                            substr(period, 12, 2)
-                        )
-                    AND date(
-                        substr(period, 18, 4) || '-' ||
-                        substr(period, 15, 2) || '-' ||
-                        substr(period, 12, 2)
-                    ) < date('2030-01-01')
-                    AND day < 0
-                THEN ROUND(tb.price * ((100 + day) / 100.0), 2)
-
-                ELSE tb.price
-            END AS Price,
-
-            CASE
-                WHEN
-                    tb.memo NOT LIKE '%Card=%'
-                    AND date('now') BETWEEN
-                        date(
-                            substr(period, 7, 4) || '-' ||
-                            substr(period, 4, 2) || '-' ||
-                            substr(period, 1, 2)
-                        )
-                        AND
-                        date(
-                            substr(period, 18, 4) || '-' ||
-                            substr(period, 15, 2) || '-' ||
-                            substr(period, 12, 2)
-                        )
-                    AND date(
-                        substr(period, 18, 4) || '-' ||
-                        substr(period, 15, 2) || '-' ||
-                        substr(period, 12, 2)
-                    ) < date('2030-01-01')
-                    AND day != 0
-                THEN tb.price
-
-                ELSE 0
-            END AS PriceOld,
-
-            CASE
-                WHEN
-                    tb.memo NOT LIKE '%Card=%'
-                    AND date('now') BETWEEN
-                        date(
-                            substr(period, 7, 4) || '-' ||
-                            substr(period, 4, 2) || '-' ||
-                            substr(period, 1, 2)
-                        )
-                        AND
-                        date(
-                            substr(period, 18, 4) || '-' ||
-                            substr(period, 15, 2) || '-' ||
-                            substr(period, 12, 2)
-                        )
-                    AND day != 0
-                THEN 'Товар по акції'
-
-                ELSE ''
-            END AS Loyalty,
-
+            tb.price AS Price,
+            p.price AS PriceOld,
+            tb.memo AS Memo,
             p.category AS Category,
             p.country AS Country,
             p.brand AS Brand,
@@ -286,45 +193,33 @@ namespace PriceCheckerAvalonia.Core.Services
             p.stock_qty AS StockQty,
             p.image_path AS ImagePath,
             p.updated_at AS UpdatedAt
-
         FROM t_bar tb
-
         LEFT JOIN products p
             ON tb.id_article = p.barcode
-
-        LEFT JOIN (
-            SELECT
-                id_bar,
-
-                CAST(
-                    substr(
-                        memo,
-                        instr(memo, '$Day=') + 5,
-                        instr(
-                            substr(memo, instr(memo, '$Day=') + 5),
-                            ';'
-                        ) - 1
-                    ) AS REAL
-                ) AS day,
-
-                substr(
-                    substr(
-                        memo,
-                        instr(memo, '$DayPeriod=') + 11
-                    ),
-                    1,
-                    21
-                ) AS period
-
-            FROM t_bar
-        ) promo
-            ON promo.id_bar = tb.id_bar
-
         WHERE tb.bar = @barcode
-
         LIMIT 1
         """,
                 new { barcode });
+
+            if (product == null)
+                return null;
+
+            var promotion = PromotionInfo.Parse(product.Memo);
+
+            if (promotion.IsActive && promotion.Day != 0)
+            {
+                product.PriceOld = product.Price;
+
+                if (promotion.Day > 0)
+                    product.Price = promotion.Day;
+                else
+                    product.Price = Math.Round(
+                        product.Price * (100 + promotion.Day) / 100,
+                        2);
+
+            }
+
+            return product;
         }
 
         public DateTime GetLastSyncTime()

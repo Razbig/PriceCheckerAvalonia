@@ -1,0 +1,137 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PriceCheckerAvalonia.ViewModels"
+             x:Class="PriceCheckerAvalonia.Views.AssistantPrint"
+             Width="1166" Height="648">
+
+    <UserControl.Resources>
+
+        <!-- Frame 54 / Frame 52: один рядок товару -->
+        <DataTemplate x:Key="ProductRowTemplate" DataType="vm:ProductPrintItem">
+            <StackPanel Spacing="4">
+
+                <Grid ColumnDefinitions="44,578,178,182,44" Height="44">
+
+                    <!-- фото товару 44x44 -->
+                    <Border Grid.Column="0" Width="44" Height="44" CornerRadius="6" ClipToBounds="True"
+                            Background="#EEF2FC">
+                        <Image Source="{Binding ImageBitmap}" Stretch="UniformToFill" />
+                    </Border>
+
+                    <!-- назва + артикул -->
+                    <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Center" Spacing="4">
+                        <TextBlock Text="{Binding Name}"
+                                   FontFamily="Montserrat" FontWeight="Bold" FontSize="16"
+                                   Foreground="#202123"
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock FontFamily="Montserrat" FontSize="16" Foreground="#939392">
+                            <Run Text="артикул: " /><Run Text="{Binding ArticleText}" />
+                        </TextBlock>
+                    </StackPanel>
+
+                    <!-- лічильник / ціна / закрити -->
+                    <!-- Counter -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="16"
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button Width="44" Height="44" Padding="0" CornerRadius="8"
+                                BorderBrush="#009CDF" BorderThickness="1" Background="Transparent"
+                                Command="{Binding DecreaseCommand}">
+                            <TextBlock Text="−" FontSize="20" Foreground="#009CDF"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Button>
+                        <TextBlock Text="{Binding Quantity}" FontFamily="Montserrat" FontSize="24"
+                                   FontWeight="Medium" Foreground="#202123" Width="30"
+                                   TextAlignment="Center" VerticalAlignment="Center" />
+                        <Button Width="44" Height="44" Padding="0" CornerRadius="8"
+                                BorderBrush="#009CDF" BorderThickness="1" Background="Transparent"
+                                Command="{Binding IncreaseCommand}">
+                            <TextBlock Text="+" FontSize="20" Foreground="#009CDF"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Ціна / знижка -->
+                    <StackPanel Grid.Column="3" Spacing="6"
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding PriceText}" FontFamily="Montserrat" FontWeight="Bold"
+                                   FontSize="20" Foreground="#202123" TextAlignment="Center" />
+                        <TextBlock Text="{Binding DiscountText}" FontFamily="Montserrat" FontSize="12"
+                                   Foreground="#009CDF" TextAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Icon/close -->
+                    <Button Grid.Column="4" Width="44" Height="44" Padding="0"
+                            Background="Transparent" BorderThickness="0"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Command="{Binding RemoveCommand}">
+                        <TextBlock Text="✕" FontSize="16" Foreground="#939392" />
+                    </Button>
+                </Grid>
+
+                <!-- Vector 6: розділювач між товарами -->
+                <Border Height="1" Background="#EEF2FC" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <!-- Frame 2147224976: колонка, gap 20, padding 10/0/30 -->
+    <StackPanel Spacing="20" Margin="0,10,0,30">
+
+        <!-- Frame 2147224978 -->
+        <StackPanel Width="1166" Spacing="10">
+
+            <!-- Frame 49: картка "Footer" з рамкою #A6D3EC -->
+            <Border Width="1166" Height="484"
+                    Background="White" BorderBrush="#A6D3EC" BorderThickness="1" CornerRadius="16"
+                    Padding="50,30,50,20">
+                <DockPanel LastChildFill="True">
+
+                    <!-- заголовок таблиці: Найменування / кількість / Ціна -->
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="44,578,178,182,44" Height="25" Margin="0,0,0,16">
+                        <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Text="Найменування" FontFamily="Montserrat" FontSize="16"
+                                   Foreground="#202123" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="кількість" FontFamily="Montserrat" FontSize="16"
+                                   Foreground="#202123" VerticalAlignment="Center" TextAlignment="Center" />
+                        <TextBlock Grid.Column="3" Text="Ціна" FontFamily="Montserrat" FontSize="16"
+                                   Foreground="#202123" VerticalAlignment="Center" TextAlignment="Center" />
+                    </Grid>
+
+                    <!-- Vector 11: синя лінія під заголовком -->
+                    <Border DockPanel.Dock="Top" Height="1.5" Background="#009CDF" Margin="0,0,0,16" />
+
+                    <!-- Товари: прокручуваний список рядків -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Items}"
+                                      ItemTemplate="{StaticResource ProductRowTemplate}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="12" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- підказка -->
+        <TextBlock Text="Відскануйте товари, а потім свій бейдж, щоб надіслати цінники на друк."
+                   FontFamily="Montserrat" FontSize="15" Foreground="Black"
+                   HorizontalAlignment="Center" TextAlignment="Center" Width="1166" />
+
+        <!-- Frame 2147224979: кнопки внизу -->
+        <StackPanel Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center">
+            <Button Width="320" Height="69" CornerRadius="16" Background="#009CDF"
+                    Command="{Binding PrintCommand}">
+                <TextBlock Text="Відправити на друк" FontFamily="Montserrat" FontWeight="Medium"
+                           FontSize="24" Foreground="White" HorizontalAlignment="Center" />
+            </Button>
+            <Button Width="320" Height="69" CornerRadius="16" Background="White"
+                    BorderBrush="#009CDF" BorderThickness="2"
+                    Command="{Binding ClearAllCommand}">
+                <TextBlock Text="Очистити все" FontFamily="Montserrat" FontWeight="Medium"
+                           FontSize="24" Foreground="#009CDF" HorizontalAlignment="Center" />
+            </Button>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

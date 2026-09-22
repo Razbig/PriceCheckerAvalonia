@@ -21,8 +21,14 @@ public partial class ProductInfo : UserControl
         ProductName.Text = product.Name ?? string.Empty;
         ProductArticle.Text = $"артикул: {product.Article} / в наличии {product.StockQty} шт.";
         ProductPrice.Text = string.Format("{0:0.00} ₴", product.Price);
+        OldPrice.Text = string.Format("{0:0.00} ₴", product.PriceOld);
         ProductType.Text = string.IsNullOrEmpty(product.ProductType) ? "Вид продукції: -" : $"Вид продукції: {product.ProductType}";
         Brand.Text = string.IsNullOrEmpty(product.Brand) ? "" : $"Торгова марка: {product.Brand}";
+
+        if (product.PriceOld > 0.0)
+        {
+            OldPrice.IsVisible = true;
+        }
 
         // Reset image and try to load from local file if available.
         ProductImage.Source = null;

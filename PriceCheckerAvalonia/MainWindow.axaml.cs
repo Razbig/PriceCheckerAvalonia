@@ -7,6 +7,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Styling;
+using PriceCheckerAvalonia.ViewModels;
 using PriceCheckerAvalonia.Views;
 using System;
 using System.Text;
@@ -49,6 +50,19 @@ public partial class MainWindow : Window
         var now = DateTime.Now;
         _lastKeyPress = now;
 
+        if (e.Key == Key.Enter && AssistantLoginFrame.Content is AssistantLogin assistantLogin)
+        {
+            var pinCode = assistantLogin.PinCode;
+            if (!string.IsNullOrWhiteSpace(pinCode))
+            {
+                assistantLogin.ClearPinCode();
+                _barcodeBuffer.Clear();
+                e.Handled = true;
+                ProcessBarcode(pinCode);
+                return;
+            }
+        }
+
         // Enter — штрихкод готовий
         if (e.Key == Key.Enter)
         {
@@ -90,111 +104,51 @@ public partial class MainWindow : Window
         return null;
     }
 
+    // ...existing code...
     private void ProcessBarcode(string barcode)
     {
-        // Try to find product in local DB
-        try
+        if (AssistantLoginFrame.Content is AssistantPrint assistantPrint &&
+            assistantPrint.DataContext is AssistantPrintViewModel printViewModel)
         {
-            var app = Avalonia.Application.Current as App;
-            var localDb = app?.LocalDb; // core LocalDatabase
-            PriceCheckerAvalonia.Core.Model.Product? product = null;
-            if (localDb != null)
-            {
-                product = localDb.FindByBarcode(barcode);
-            }
-
+            var product = (Application.Current as App)?.LocalDb?.FindByBarcode(barcode);
             if (product != null)
             {
-                // Show product info
-                var info = new ProductInfo();
-                info.SetProduct(product);
-                ProductInfoFrame.Content = info;
-                ShowFrame(ProductInfoFrame);
-                // If image path is a URL (starts with http), download in background and update DB/UI
-                if (!string.IsNullOrWhiteSpace(product.ImagePath) &&
-                    (product.ImagePath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || product.ImagePath.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
-                {
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            var app = Avalonia.Application.Current as App;
-                            var http = new System.Net.Http.HttpClient();
-                            var imgUrl = product.ImagePath!;
-                            var imgBytes = await http.GetByteArrayAsync(imgUrl);
-                            var imagesDir = System.IO.Path.Combine(Environment.CurrentDirectory, "images");
-                            System.IO.Directory.CreateDirectory(imagesDir);
-                            var ext = System.IO.Path.GetExtension(new Uri(imgUrl).AbsolutePath);
-                            if (string.IsNullOrWhiteSpace(ext)) ext = ".jpg";
-                            var fileName = product.Barcode + ext;
-                            var savePath = System.IO.Path.Combine(imagesDir, fileName);
-                            await System.IO.File.WriteAllBytesAsync(savePath, imgBytes);
-
-                            // Update DB record
-                            app?.LocalDb?.UpsertProducts(new[] { new PriceCheckerAvalonia.Core.Model.Product
-                            {
-                                Barcode = product.Barcode,
-                                ImagePath = savePath,
-                                Id = product.Id,
-                                Article = product.Article,
-                                Name = product.Name,
-                                Price = product.Price,
-                                Category = product.Category,
-                                Country = product.Country,
-                                Brand = product.Brand,
-                                ProductType = product.ProductType,
-                                StockQty = product.StockQty,
-                                UpdatedAt = DateTime.UtcNow
-                            }});
-
-                            // Refresh UI on main thread
-                            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
-                            {
-                                // Ensure the file is flushed by the background task; small retry loop
-                                var imagesDir = System.IO.Path.Combine(Environment.CurrentDirectory, "images");
-                                var ext = System.IO.Path.GetExtension(new Uri(imgUrl).AbsolutePath);
-                                if (string.IsNullOrWhiteSpace(ext)) ext = ".jpg";
-                                var fileName = product.Barcode + ext;
-                                var savePath = System.IO.Path.Combine(imagesDir, fileName);
-
-                                // Try to load the file a few times if it's still being written
-                                for (int i = 0; i < 5; i++)
-                                {
-                                    if (System.IO.File.Exists(savePath)) break;
-                                    await Task.Delay(100);
-                                }
-
-                                // If current frame holds ProductInfo, update its image directly
-                                if (ProductInfoFrame.Content is PriceCheckerAvalonia.Views.ProductInfo pi)
-                                {
-                                    pi.SetImageFromFile(savePath);
-                                }
-
-                                // Also refresh product data in DB and update text fields if needed
-                                var updated = app?.LocalDb?.FindByBarcode(product.Barcode);
-                                if (updated != null && ProductInfoFrame.Content is PriceCheckerAvalonia.Views.ProductInfo pi2)
-                                {
-                                    pi2.SetProduct(updated);
-                                }
-                            });
-                        }
-                        catch
-                        {
-                            // ignore background download errors
-                        }
-                    });
-                }
+                printViewModel.AddProduct(product);
             }
             else
             {
-                // Not found
                 ShowErrorPopup();
             }
+
+            return;
         }
-        catch
+
+        if (AssistantLoginFrame.IsVisible && barcode == "1234")
         {
-            ShowErrorPopup();
+            OpenAssistantPrint();
+            return;
         }
+
+        // Test shortcut: barcode 12345 opens AssistantPrint with test products.
+        if (AssistantLoginFrame.IsVisible && barcode == "12345")
+        {
+            OpenAssistantPrint(addTestProducts: true);
+            return;
+        }
+
+        // ...existing code...
+    }
+
+    private void OpenAssistantPrint(bool addTestProducts = false)
+    {
+        var printViewModel = new AssistantPrintViewModel();
+        if (addTestProducts)
+            printViewModel.AddTestProducts();
+
+        AssistantLoginFrame.Content = new AssistantPrint
+        {
+            DataContext = printViewModel
+        };
     }
 
     // ──────────────────────────────────────────────
@@ -241,11 +195,22 @@ public partial class MainWindow : Window
     {
         TakeBlurSnapshot();
         ShowFrame(AssistantLoginFrame);
-        AssistantLoginFrame.Content = new AssistantLogin();
+        var assistantLogin = new AssistantLogin();
+        assistantLogin.PinSubmitted += AssistantLogin_PinSubmitted;
+        AssistantLoginFrame.Content = assistantLogin;
 
         CloseAssistantButton.IsVisible = true;
         OpenAssistantButton.IsVisible = false;
         SettingsButton.IsVisible = true;
+    }
+
+    private void AssistantLogin_PinSubmitted(string pinCode)
+    {
+        if (AssistantLoginFrame.Content is AssistantLogin assistantLogin)
+            assistantLogin.ClearPinCode();
+
+        _barcodeBuffer.Clear();
+        ProcessBarcode(pinCode);
     }
 
     private void CloseAssistantLogin_Click(object? sender, RoutedEventArgs e)
