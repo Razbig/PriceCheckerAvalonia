@@ -25,7 +25,8 @@
 
             <StackPanel Margin="100,100,100,80" VerticalAlignment="Center">
 
-                <TextBlock Text="Товар не знайдено"
+                <TextBlock x:Name="ErrorTitle"
+                           Text="Товар не знайдено"
                            FontSize="36"
                            FontFamily="Montserrat"
                            FontWeight="Bold"
@@ -34,7 +35,8 @@
                            LineHeight="50"
                            Margin="0,0,0,20"/>
 
-                <TextBlock Text="Спробуйте ще раз або зверніться до співробітника"
+                <TextBlock x:Name="ErrorMessage"
+                           Text="Спробуйте ще раз або зверніться до співробітника"
                            FontSize="24"
                            FontFamily="Montserrat"
                            FontWeight="Medium"

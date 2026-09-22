@@ -1,6 +1,7 @@
 ﻿<Window x:Class="PriceCheckerAvalonia.MainWindow"
         xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vlc="clr-namespace:LibVLCSharp.Avalonia;assembly=LibVLCSharp.Avalonia"
         Title="PriceChecker"
         WindowState="FullScreen"
         SystemDecorations="None"
@@ -16,7 +17,8 @@
         </Style>
 	</Window.Styles>
 
-	<Viewbox Stretch="Uniform" x:Name="MainRootUniform">
+    <Grid>
+		<Viewbox Stretch="Uniform" x:Name="MainRootUniform">
 		<Grid x:Name="MainRootGrid" Width="1920" Height="1080">
 			<Grid.RowDefinitions>
 				<RowDefinition Height="200"/>
@@ -53,6 +55,21 @@
 								<Rectangle Width="45" Height="15" Fill="#FFDA2C"/>
 							</StackPanel>
 						</Border>
+
+						<Button x:Name="ManualBarcodeButton"
+								Cursor="Hand"
+								ToolTip.Tip="Ввести штрихкод"
+								Background="White"
+								BorderBrush="#009CDF"
+								BorderThickness="2"
+								CornerRadius="12"
+								Width="80" Height="80"
+								Margin="0,0,20,0"
+								Padding="0">
+							<PathIcon Data="{StaticResource SearchIcon}"
+									  Foreground="#009CDF"
+								  Width="38" Height="38"/>
+						</Button>
 
 						<!-- Кнопка асистента -->
 						<Button x:Name="OpenAssistantButton"
@@ -160,6 +177,20 @@
 							IsVisible="False"
 							ZIndex="100"/>
 
+			<ContentControl x:Name="ManualBarcodeFrame"
+							Width="900" Height="900"
+							VerticalAlignment="Center" HorizontalAlignment="Center"
+							Grid.Row="0" Grid.RowSpan="2"
+							IsVisible="False"
+							ZIndex="110"/>
+
+			<ContentControl x:Name="AssistantPinErrorFrame"
+							Width="1200" Height="750"
+							VerticalAlignment="Center" HorizontalAlignment="Center"
+							Grid.Row="0" Grid.RowSpan="2"
+							IsVisible="False"
+							ZIndex="100"/>
+
             <ContentControl x:Name="SettingsFrame"
 					Grid.Row="1"
 					HorizontalAlignment="Stretch"
@@ -168,6 +199,24 @@
 					IsVisible="False"
 					ZIndex="4"/>
 
-		</Grid>
-	</Viewbox>
+           </Grid>
+		</Viewbox>
+
+		<Border x:Name="VideoOverlay"
+					Background="Black"
+					IsVisible="False"
+					ZIndex="200"
+					PointerPressed="VideoOverlay_PointerPressed">
+               <vlc:VideoView x:Name="VideoView"
+							   HorizontalAlignment="Stretch"
+							   VerticalAlignment="Stretch"
+                             PointerPressed="VideoOverlay_PointerPressed">
+					<vlc:VideoView.Content>
+						<Border Background="Transparent"
+								PointerPressed="VideoOverlay_PointerPressed" />
+					</vlc:VideoView.Content>
+				</vlc:VideoView>
+			</Border>
+
+ </Grid>
 </Window>

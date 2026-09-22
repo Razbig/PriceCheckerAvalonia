@@ -121,9 +121,12 @@ namespace PriceCheckerAvalonia.Core.Services
 
                 try
                 {
-                    conn.Execute("""
-                ALTER TABLE t_bar ADD COLUMN price REAL;
-            """, transaction: tx);
+                    if (!ColumnExists(conn, "t_bar", "price"))
+                    {
+                        conn.Execute("""
+                    ALTER TABLE t_bar ADD COLUMN price REAL;
+                """, transaction: tx);
+                    }
 
                     conn.Execute("""
                 INSERT INTO sync_meta (key, value)
@@ -149,6 +152,17 @@ namespace PriceCheckerAvalonia.Core.Services
                     $"Непідтримувана версія локальної БД: {version}. " +
                     $"Очікується: {CurrentDbVersion}.");
             }
+        }
+
+        private static bool ColumnExists(IDbConnection conn, string tableName, string columnName)
+        {
+            return conn.ExecuteScalar<long>(
+                """
+                SELECT COUNT(*)
+                FROM pragma_table_info(@TableName)
+                WHERE name = @ColumnName;
+                """,
+                new { TableName = tableName, ColumnName = columnName }) > 0;
         }
 
         private static void SetDbVersion(IDbConnection conn, int version)

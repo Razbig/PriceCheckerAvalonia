@@ -1,0 +1,106 @@
+﻿<UserControl x:Class="PriceCheckerAvalonia.Views.ManualBarcodeEntry"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+    <UserControl.Styles>
+        <Style Selector="Button.KeypadButton">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#B9E8F8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Foreground" Value="#009CDF" />
+            <Setter Property="FontFamily" Value="Montserrat" />
+            <Setter Property="FontSize" Value="32" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.ActionButton">
+            <Setter Property="Background" Value="#E3F4FA" />
+            <Setter Property="Foreground" Value="#202123" />
+        </Style>
+    </UserControl.Styles>
+
+    <Border Background="White"
+            BorderBrush="#DFF4FF"
+            BorderThickness="2"
+            CornerRadius="24"
+            Padding="42">
+        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="24">
+            <TextBlock Grid.Row="0"
+                       Text="Введіть штрихкод товару"
+                       FontFamily="Montserrat"
+                       FontSize="38"
+                       FontWeight="Bold"
+                       Foreground="#633A8E"
+                       TextAlignment="Center"
+                       HorizontalAlignment="Center" />
+
+            <TextBox x:Name="BarcodeTextBox"
+                     Grid.Row="1"
+                     Height="76"
+                     FontFamily="Montserrat"
+                     FontSize="34"
+                     Foreground="#202123"
+                     Background="#F8FCFE"
+                     BorderBrush="#8DD7F5"
+                     BorderThickness="2"
+                     CornerRadius="12"
+                     Watermark="Штрихкод"
+                     HorizontalContentAlignment="Center"
+                     VerticalContentAlignment="Center"
+                     KeyDown="BarcodeTextBox_KeyDown" />
+
+            <Grid Grid.Row="2"
+                  Width="540"
+                  RowDefinitions="*,*,*,*"
+                  ColumnDefinitions="*,*,*"
+                  RowSpacing="12"
+                  ColumnSpacing="12"
+                  HorizontalAlignment="Center">
+                <Button Grid.Row="0" Grid.Column="0" Classes="KeypadButton" Content="1" Tag="1" Click="Digit_Click" />
+                <Button Grid.Row="0" Grid.Column="1" Classes="KeypadButton" Content="2" Tag="2" Click="Digit_Click" />
+                <Button Grid.Row="0" Grid.Column="2" Classes="KeypadButton" Content="3" Tag="3" Click="Digit_Click" />
+                <Button Grid.Row="1" Grid.Column="0" Classes="KeypadButton" Content="4" Tag="4" Click="Digit_Click" />
+                <Button Grid.Row="1" Grid.Column="1" Classes="KeypadButton" Content="5" Tag="5" Click="Digit_Click" />
+                <Button Grid.Row="1" Grid.Column="2" Classes="KeypadButton" Content="6" Tag="6" Click="Digit_Click" />
+                <Button Grid.Row="2" Grid.Column="0" Classes="KeypadButton" Content="7" Tag="7" Click="Digit_Click" />
+                <Button Grid.Row="2" Grid.Column="1" Classes="KeypadButton" Content="8" Tag="8" Click="Digit_Click" />
+                <Button Grid.Row="2" Grid.Column="2" Classes="KeypadButton" Content="9" Tag="9" Click="Digit_Click" />
+                <Button Grid.Row="3" Grid.Column="0" Classes="KeypadButton ActionButton" Content="Очистити" FontSize="19" Click="Clear_Click" />
+                <Button Grid.Row="3" Grid.Column="1" Classes="KeypadButton" Content="0" Tag="0" Click="Digit_Click" />
+                <Button Grid.Row="3" Grid.Column="2" Classes="KeypadButton ActionButton" Content="⌫" Click="Backspace_Click" />
+            </Grid>
+
+            <StackPanel Grid.Row="3"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Spacing="18">
+                <Button Content="Скасувати"
+                        Width="220"
+                        FontFamily="Montserrat"
+                        Height="68"
+                        FontSize="22"
+                        FontWeight="SemiBold"
+                        Background="#E3F4FA"
+                        Foreground="#202123"
+                        BorderThickness="0"
+                        CornerRadius="14"
+                        Click="Cancel_Click" />
+                <Button Content="Знайти товар"
+                        Width="260"
+                        Height="68"
+                        FontFamily="Montserrat"
+                        FontSize="22"
+                        FontWeight="Bold"
+                        Background="#009CDF"
+                        Foreground="White"
+                        BorderThickness="0"
+                        CornerRadius="14"
+                        Click="Submit_Click" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
