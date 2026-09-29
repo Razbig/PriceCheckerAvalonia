@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		
 		<ApplicationVersion>1.0.0</ApplicationVersion>
-		<Version>1.0.2</Version>
+		<Version>1.0.4</Version>
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<FileVersion>1.0.0.0</FileVersion>
 		
@@ -31,6 +31,10 @@
 		<AvaloniaResource Include="Assets\Assistant.svg" />
 		<AvaloniaResource Include="Assets\Kopiyka_logo.png" />
 		<AvaloniaResource Include="Assets\Product_with_barcode.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <AvaloniaResource Include="Assets\Print_Success.png" />
 	</ItemGroup>
 
 	<ItemGroup>

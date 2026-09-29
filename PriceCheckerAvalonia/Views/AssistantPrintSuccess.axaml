@@ -1,0 +1,83 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PriceCheckerAvalonia.Views.AssistantPrintSuccess"
+             Width="1200" Height="750">
+
+    <Border Background="White"
+            CornerRadius="16"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch">
+        <Grid>
+
+            <Button HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Margin="0,60,60,0" Width="50" Height="50"
+                    Cursor="Hand" Click="CloseAssistant_Click"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="0">
+                <Path Data="M15,15 L35,35 M35,15 L15,35"
+                      Stroke="#202123"
+                      StrokeThickness="3"
+                      StrokeLineCap="Round"/>
+            </Button>
+
+            <StackPanel Margin="100,100,100,80" VerticalAlignment="Center" HorizontalAlignment="Center" Width="760">
+
+                <TextBlock x:Name="SuccessTitle"
+                           Text="Цінники успішно відправлено на друк."
+                           FontSize="36"
+                           FontFamily="Montserrat"
+                           FontWeight="Bold"
+                           Foreground="#951A75"
+                           TextAlignment="Center"
+                           LineHeight="50"
+                           Margin="0,0,0,20"/>
+
+                <TextBlock x:Name="SuccessMessage"
+                           Text="Після завершення друку, вийдіть з кабінету асистента"
+                           FontSize="24"
+                           FontFamily="Montserrat"
+                           FontWeight="Medium"
+                           Foreground="#202123"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,40"/>
+
+                <Image Source="/Assets/Print_Success.png"
+                       Width="304" Height="167"
+                       Stretch="Uniform"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,40"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="20">
+                    <Button Width="290" Height="90"
+                            Cursor="Hand"
+                            Click="ExitButton_Click"
+                            Background="#009CDF"
+                            BorderThickness="0"
+                            CornerRadius="16"
+                            Padding="0"
+                            HorizontalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                            <TextBlock Text="Вийти"
+                                       Foreground="White"
+                                       FontSize="32"
+                                       FontFamily="Montserrat"
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+                            <Path Data="M15 4H5V18C5 18.53 5.21 19.04 5.59 19.41C5.96 19.79 6.47 20 7 20H15M16 9L19 12L16 15M19 12H9"
+									  Stroke="White"
+									  StrokeThickness="2"
+									  StrokeLineCap="Round"
+									  Fill="Transparent"
+									  Stretch="Uniform"
+									  Width="40" Height="40"/>
+                    </StackPanel>
+                    </Button>
+                </StackPanel>
+
+            </StackPanel>
+        </Grid>
+    </Border>
+
+</UserControl>

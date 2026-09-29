@@ -1,8 +1,15 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Collections.ObjectModel;
 using System;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia;
+using PriceCheckerAvalonia.Core.Services;
 using PriceCheckerAvalonia.Core.Model;
 using PriceCheckerAvalonia.Helpers;
 
@@ -10,14 +17,23 @@ namespace PriceCheckerAvalonia.ViewModels
 {
     public class AssistantPrintViewModel : INotifyPropertyChanged
     {
+        private static readonly HttpClient Http = new();
+        private const string PrintEndpoint = "https://pim.almi.odesa.ua/RetailHelper/hs/mobile/print";
+        private const string BasicCredentials = "UHJpY2VDaGVja2VyOlBhc3NQcmljZUNoZWNrZXI=";
+
         public ObservableCollection<ProductPrintItem> Items { get; } = new();
 
         public ICommand PrintCommand { get; }
         public ICommand ClearAllCommand { get; }
+        public string PrintStatus { get; private set; } = string.Empty;
+        public bool IsPrinting { get; private set; }
+
+        private readonly RelayCommand _printCommand;
 
         public AssistantPrintViewModel()
         {
-            PrintCommand = new RelayCommand(OnPrint);
+            _printCommand = new RelayCommand(OnPrint, () => !IsPrinting);
+            PrintCommand = _printCommand;
             ClearAllCommand = new RelayCommand(() => Items.Clear());
         }
 
@@ -83,11 +99,93 @@ namespace PriceCheckerAvalonia.ViewModels
             Items.Remove(item);
         }
 
-        private void OnPrint()
+        private async void OnPrint()
         {
-            // TODO: логіка відправки цінників на друк
+            if (Items.Count == 0)
+            {
+                SetPrintStatus("Додайте товари перед відправленням на друк.");
+                return;
+            }
+
+            var localDb = (Application.Current as App)?.LocalDb;
+            if (localDb == null)
+            {
+                SetPrintStatus("Локальна база даних недоступна.");
+                return;
+            }
+
+            var shopId = localDb.GetShopId();
+            if (shopId == 0)
+            {
+                SetPrintStatus("Спочатку виберіть магазин у налаштуваннях.");
+                return;
+            }
+
+            var barcodes = Items
+                .Where(item => !string.IsNullOrWhiteSpace(item.Product.Barcode))
+                .SelectMany(item => Enumerable.Repeat(item.Product.Barcode.Trim(), item.Quantity))
+                .ToArray();
+
+            if (barcodes.Length == 0)
+            {
+                SetPrintStatus("У списку немає штрихкодів для друку.");
+                return;
+            }
+
+            IsPrinting = true;
+            OnPropertyChanged(nameof(IsPrinting));
+            _printCommand.RaiseCanExecuteChanged();
+            SetPrintStatus(string.Empty);
+
+            try
+            {
+                var printType = localDb.GetPrintTypeDefault() == "39" ? "39mm" : "32mm";
+                var payload = new
+                {
+                    stock = shopId.ToString(),
+                    deviceID = Environment.MachineName,
+                    user = "Price checker",
+                    article = string.Empty,
+                    barcode = barcodes,
+                    size = printType
+                };
+
+                using var request = new HttpRequestMessage(HttpMethod.Post, PrintEndpoint);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Basic", BasicCredentials);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+
+                using var response = await Http.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                Items.Clear();
+                SetPrintStatus("Цінники успішно відправлено на друк.");
+            }
+            catch (HttpRequestException ex)
+            {
+                SetPrintStatus($"Не вдалося відправити цінники на друк: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                SetPrintStatus($"Помилка під час відправлення на друк: {ex.Message}");
+            }
+            finally
+            {
+                IsPrinting = false;
+                OnPropertyChanged(nameof(IsPrinting));
+                _printCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        private void SetPrintStatus(string status)
+        {
+            PrintStatus = status;
+            OnPropertyChanged(nameof(PrintStatus));
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

@@ -516,7 +516,6 @@ public partial class MainWindow : Window
         return null;
     }
 
-    // ...existing code...
     private void ProcessBarcode(string barcode)
     {
         if (AssistantLoginFrame.Content is AssistantPrint assistantPrint &&
@@ -623,6 +622,48 @@ public partial class MainWindow : Window
         BlurredSnapshot.Source = null;
     }
 
+    // Покажемо попап успішного друку
+    public void ShowPrintSuccess(
+        string title = "Цінники успішно відправлено на друк.",
+        string message = "Після завершення друку, вийдіть з кабінету асистента")
+    {
+        // Пам'ятаємо звідки відкрито, щоб при закритті не повертатися назад автоматично
+        if (!ProductNotFoundFrame.IsVisible)
+        {
+            _frameBeforeError = new[]
+            {
+                MainFrame,
+                AssistantLoginFrame,
+                ProductInfoFrame,
+                SettingsFrame
+            }.FirstOrDefault(frame => frame.IsVisible) ?? MainFrame;
+        }
+
+        TakeBlurSnapshot();
+        ShowFrame(ProductNotFoundFrame);
+        BlurOverlay.IsVisible = true;
+        ProductNotFoundFrame.Content = new AssistantPrintSuccess(title, message);
+    }
+
+    // Закрити кабінет асистента та повернутися на головний екран
+    public void CloseAssistant()
+    {
+        HideBlurDialog();
+        // Закриваємо фрейм асистента
+        AssistantLoginFrame.IsVisible = false;
+        AssistantLoginFrame.Content = null;
+
+        // Якщо був відкритий попап успіху — сховаємо його
+        ProductNotFoundFrame.IsVisible = false;
+
+        ShowFrame(MainFrame);
+
+        CloseAssistantButton.IsVisible = false;
+        OpenAssistantButton.IsVisible = true;
+        SettingsButton.IsVisible = false;
+        ManualBarcodeButton.IsVisible = true;
+    }
+
     public void SetMainFrameVisible(bool visible)
     {
         MainFrame.IsVisible = visible;
@@ -669,16 +710,7 @@ public partial class MainWindow : Window
 
     private void CloseAssistantLogin_Click(object? sender, RoutedEventArgs e)
     {
-        HideBlurDialog();
-        AssistantLoginFrame.IsVisible = false;
-        AssistantLoginFrame.Content = null;
-
-        ShowFrame(MainFrame);
-
-        CloseAssistantButton.IsVisible = false;
-        OpenAssistantButton.IsVisible = true;
-        SettingsButton.IsVisible = false;
-        ManualBarcodeButton.IsVisible = true;
+        CloseAssistant();
     }
 
     private void ManualBarcode_Click(object? sender, RoutedEventArgs e)
