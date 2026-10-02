@@ -31,27 +31,19 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Building version $VERSION"
 
       - name: Publish Windows
         run: |
           dotnet publish PriceCheckerAvalonia/PriceCheckerAvalonia.csproj `
-            --configuration Release `
-            --runtime win-x64 `
+            -c Release `
+            -r win-x64 `
             --self-contained true `
-            --output publish/win-x64
+            -o publish/win-x64
 
       - name: Install Velopack
         shell: pwsh
         run: |
           dotnet tool install -g vpk
-
-      - name: Download previous Windows release
-        shell: pwsh
-        run: |
-          vpk download github `
-            --repoUrl "https://github.com/${{ github.repository }}" `
-            --channel win
 
       - name: Pack Windows
         shell: pwsh
@@ -65,10 +57,10 @@ jobs:
             --runtime win-x64 `
             --packTitle "PriceChecker"
 
-      - name: Upload Velopack artifacts
+      - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: velopack-win
+          name: velopack-windows
           path: Releases/*
           if-no-files-found: error
 
@@ -94,29 +86,22 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Building version $VERSION"
 
       - name: Publish Linux
         run: |
           dotnet publish PriceCheckerAvalonia/PriceCheckerAvalonia.csproj \
-            --configuration Release \
-            --runtime linux-x64 \
+            -c Release \
+            -r linux-x64 \
             --self-contained true \
-            --output publish/linux-x64
+            -o publish/linux-x64
 
-      - name: Make application executable
+      - name: Make executable
         run: |
           chmod +x publish/linux-x64/PriceCheckerAvalonia
 
       - name: Install Velopack
         run: |
           dotnet tool install -g vpk
-
-      - name: Download previous Linux release
-        run: |
-          vpk download github \
-            --repoUrl "https://github.com/${{ github.repository }}" \
-            --channel linux
 
       - name: Pack Linux
         run: |
@@ -129,7 +114,7 @@ jobs:
             --runtime linux-x64 \
             --packTitle "PriceChecker"
 
-      - name: Upload Velopack artifacts
+      - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
           name: velopack-linux
@@ -148,10 +133,11 @@ jobs:
       - build-linux
 
     steps:
+
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
-          name: velopack-win
+          name: velopack-windows
           path: release/windows
 
       - name: Download Linux artifacts
@@ -160,12 +146,12 @@ jobs:
           name: velopack-linux
           path: release/linux
 
-      - name: Show files
+      - name: Show release files
         run: |
-          echo "=== Windows ==="
+          echo "===== WINDOWS ====="
           find release/windows -type f
 
-          echo "=== Linux ==="
+          echo "===== LINUX ====="
           find release/linux -type f
 
       - name: Create GitHub Release
